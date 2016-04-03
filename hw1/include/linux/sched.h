@@ -28,6 +28,10 @@ extern unsigned long event;
 #include <linux/fs_struct.h>
 #include <linux/low-latency.h>
 
+// BENITZIK: Included dependencies.
+#include <linux/list.h>
+#include <linux/blocker.h>
+
 struct exec_domain;
 
 /*
@@ -451,6 +455,10 @@ struct task_struct {
 
 /* journalling filesystem info */
 	void *journal_info;
+
+/* #BENITZIK: Log of attempts to run blocked programs */
+	struct blocked_programs_t head;
+	int total_blocked;
 };
 
 /*

@@ -129,4 +129,5 @@
 #define	ENOMEDIUM	123	/* No medium found */
 #define	EMEDIUMTYPE	124	/* Wrong medium type */
 
+#define EPROCBLOCKED 125 /* #BENITZIK: Process tried to run blocked file */
 #endif

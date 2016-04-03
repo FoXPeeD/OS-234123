@@ -804,10 +804,29 @@ asmlinkage int sys_execve(struct pt_regs regs)
 	int error;
 	char * filename;
 
+	list_t *blocked_attempts_log;
+	
 	filename = getname((char *) regs.ebx);
 	error = PTR_ERR(filename);
 	if (IS_ERR(filename))
 		goto out;
+
+	// #BENITZIK: Check if blocked. if so, then write to log and return an error. make sure nothing is run.
+	if is_program_blocked(filename, strlen(filename))
+	{
+		void* new = kmalloc(sizeof(*blocked_attempts_t), 0);
+		if (!new)
+		{
+			error = -ENOMEM;
+			goto out;
+		}
+		strcpy(new->blocked_name, filename);
+		(find_task_by_vpid(current->ppid)->total_blocked)++;
+		list_add_tail(new->list, find_task_by_vpid(current->pid)->head->list);
+		error = -EPROCBLOCKED;
+		goto out;
+	}
+	
 	error = do_execve(filename, (char **) regs.ecx, (char **) regs.edx, &regs);
 	if (error == 0)
 		current->ptrace &= ~PT_DTRACE;

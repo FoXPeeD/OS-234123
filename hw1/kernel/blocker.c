@@ -1,0 +1,49 @@
+
+// #BENITZIK: Our system calls
+
+#include <linux/blocker.h>
+
+int sys_block_program(const char *name, unsigned int name_len)
+{
+	kprintf("In REAL Function: sys_unblock_program %s %d", name, name_len);
+
+	if (name == NULL) || (name_len == 0)
+		return -EINVAL;
+
+	if is_program_blocked(name, name_len)
+		return 0;
+	
+	void* new = kmalloc(sizeof(*blocked_programs_t), 0);
+	if (!new)
+	{
+		error = -ENOMEM;
+		goto out;
+	}
+	strcpy(new->blocked_name, filename);
+	list_add_tail(new->list, blacklist_programs->list);
+	return 1;
+}
+
+int sys_unblock_program(const char *name, unsigned int name_len)
+{
+	kprintf("In Dummy Function: sys_unblock_program %s %d", name, name_len);
+	return 1;
+}
+
+int sys_is_program_blocked(const char *name, unsigned int name_len)
+{
+	kprintf("In Dummy Function: sys_is_program_blocked %s %d", name, name_len);
+	return 33;
+}
+
+int sys_get_blocked_count(void)
+{
+	kprintf("In Dummy Function: sys_get_blocked_count");
+	return 1;
+}
+
+int get_forbidden_tries (int pid, char log[][256], unsigned int n)
+{
+	kprintf("In Dummy Function: get_forbidden_tries %d %d", pid, n);	// Didnt print log
+	return 1;
+}
