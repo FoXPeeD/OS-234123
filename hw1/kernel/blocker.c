@@ -1,8 +1,6 @@
 
 // #BENITZIK: Our system calls. KernelSpace!!
 
-//#include "blocker.h"
-
 // New struct for list of blocked attempts.
 struct blacklist_programs_t {
 	struct list_head list;
@@ -12,7 +10,7 @@ struct blacklist_programs_t {
 struct blacklist_programs_t blacklist_programs;
 
 
-int sys_block_program(const char *name, unsigned int name_len)
+asmlinkage int sys_block_program(const char *name, unsigned int name_len)
 {
 	kprintf("In REAL Function: sys_unblock_program %s %d", name, name_len);
 
@@ -34,25 +32,25 @@ int sys_block_program(const char *name, unsigned int name_len)
 	return 1;
 }
 
-int sys_unblock_program(const char *name, unsigned int name_len)
+asmlinkage int sys_unblock_program(const char *name, unsigned int name_len)
 {
 	kprintf("In Dummy Function: sys_unblock_program %s %d", name, name_len);
 	return 2;
 }
 
-int sys_is_program_blocked(const char *name, unsigned int name_len)
+asmlinkage int sys_is_program_blocked(const char *name, unsigned int name_len)
 {
 	kprintf("In Dummy Function: sys_is_program_blocked %s %d", name, name_len);
 	return 3;
 }
 
-int sys_get_blocked_count(void)
+asmlinkage int sys_get_blocked_count(void)
 {
 	kprintf("In Dummy Function: sys_get_blocked_count");
 	return 4;
 }
 
-int get_forbidden_tries (int pid, char log[][256], unsigned int n)
+asmlinkage int get_forbidden_tries (int pid, char log[][256], unsigned int n)
 {
 	kprintf("In Dummy Function: get_forbidden_tries %d %d", pid, n);	// Didnt print log
 	return 5;
