@@ -787,8 +787,16 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 	// #BENITZIK: Init added sched variables.
 	// TODO: Check INIT_LIST_HEAD vs LIST_HEAD and see which we want.
-	INIT_LIST_HEAD(p->head);
 	p->total_blocked = 0;
+	INIT_LIST_HEAD(&(p->blocked_head));
+	/*
+	struct blocked_programs_t *p->head = (struct blocked_programs_t *)malloc(sizeof(struct blocked_programs_t));
+	if (!p->head)
+	{
+		retval = -ENOMEM;
+		goto fork_out;
+	}
+	*/
 	
 fork_out:
 	return retval;

@@ -2,7 +2,7 @@
 // #BENITZIK: All of our code wrappers. UserSpace!!
 
 //#include <linux/errno.h>
-
+/*
 int block_program(const char *name, unsigned int name_len) 
 {
 	extern unsigned int res;
@@ -94,3 +94,4 @@ int get_forbidden_tries (int pid, char log[][256], unsigned int n)
 	return (int) res;
 }
 
+*/

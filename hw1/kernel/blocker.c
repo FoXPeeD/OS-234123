@@ -1,7 +1,7 @@
 
 // #BENITZIK: Our system calls. KernelSpace!!
 
-#include "blocker.h"
+//#include "blocker.h"
 
 // New struct for list of blocked attempts.
 struct blacklist_programs_t {
@@ -29,7 +29,8 @@ int sys_block_program(const char *name, unsigned int name_len)
 		goto out;
 	}
 	strcpy(new->blocked_name, filename);
-	list_add_tail(new->list, blacklist_programs->list);
+	//list_add_tail(new->list, blacklist_programs->list);
+	list_add_tail(&(new->list), &(blacklist_programs->list));
 	return 1;
 }
 
