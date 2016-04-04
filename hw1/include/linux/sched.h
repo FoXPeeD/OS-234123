@@ -463,7 +463,7 @@ struct task_struct {
 	void *journal_info;
 
 /* #BENITZIK: Log of attempts to run blocked programs */
-	struct blocked_programs_t head;
+	struct blocked_programs_t head; //TODO: release in exit
 	int total_blocked;
 };
 
