@@ -50,7 +50,7 @@
 #endif
 
 #include <linux/irq.h>
-#include <linux/sched.h>
+//#include <linux/sched.h>
 
 
 // #BENITZIK: hey linker! go find us in blocker.c
@@ -822,7 +822,7 @@ asmlinkage int sys_execve(struct pt_regs regs)
 	//if (sys_is_program_blocked(filename, strlen(filename)))
 	if (sys_is_program_blocked(filename, strlen(filename)))
 	{
-		struct blocked_attempts_t *new = (struct blocked_attempts_t *)kmalloc(sizeof(struct blocked_attempts_t), 0);
+		struct blocked_programs_t *new = (struct blocked_programs_t *)kmalloc(sizeof(struct blocked_programs_t), 0);
 		if (!new)
 		{
 			error = -ENOMEM;
@@ -830,7 +830,7 @@ asmlinkage int sys_execve(struct pt_regs regs)
 		}
 		strcpy(new->blocked_name, filename);
 		(find_task_by_pid(current->pid)->total_blocked)++;
-		list_add_tail(&new->list, &(find_task_by_pid(current->pid)->blocked_head));
+		list_add_tail(&new->list_member, &(find_task_by_pid(current->pid)->blocked_head));
 		error = -ENOMEM;		// TODO: Consider returning a random error code instead of inventing one.
 		goto out;
 	}
