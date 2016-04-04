@@ -50,6 +50,8 @@
 #endif
 
 #include <linux/irq.h>
+#include <linux/sched.h>
+
 
 asmlinkage void ret_from_fork(void) __asm__("ret_from_fork");
 
@@ -810,6 +812,7 @@ asmlinkage int sys_execve(struct pt_regs regs)
 		goto out;
 
 	// #BENITZIK: Check if blocked. if so, then write to log and return an error. make sure nothing is run.
+	//if (sys_is_program_blocked(filename, strlen(filename)))
 	if (sys_is_program_blocked(filename, strlen(filename)))
 	{
 		struct blocked_attempts_t *new = (struct blocked_attempts_t *)kmalloc(sizeof(struct blocked_attempts_t), 0);
