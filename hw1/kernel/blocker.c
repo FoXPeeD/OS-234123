@@ -31,13 +31,13 @@ int sys_block_program(const char *name, unsigned int name_len)
 	if (sys_is_program_blocked(name, name_len))
 		return 0;
 	
-	struct blacklist_programs_t *new = (struct blacklist_programs_t *)kmalloc(sizeof(blacklist_programs_t), 0);
+	struct blacklist_programs_t *new = (struct blacklist_programs_t *)kmalloc(sizeof(struct blacklist_programs_t), 0);
 	if (!new)
 		return -ENOMEM;
 	
-	strcpy(new->blocked_name, filename);
+	strcpy(new->blocked_name, name);
 	//list_add_tail(new->list, blacklist_programs->list);
-	list_add_tail(&(new->blacklist_head), &blacklist_head);
+	list_add_tail(&(new->blacklist_member), &blacklist_head);
 	return 1;
 }
 
@@ -53,8 +53,8 @@ int sys_get_blocked_count(void)
 	return 4;
 }
 
-int get_forbidden_tries (int pid, char log[][256], unsigned int n)
+int sys_get_forbidden_tries (int pid, char log[][256], unsigned int n)
 {
-	printk("In Dummy Function: get_forbidden_tries %d %d", pid, n);	// Didnt print log
+	printk("In Dummy Function: sys_get_forbidden_tries %d %d", pid, n);	// Didnt print log
 	return 5;
 }
