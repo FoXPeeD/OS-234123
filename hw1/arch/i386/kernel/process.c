@@ -51,6 +51,13 @@
 
 #include <linux/irq.h>
 
+// #BENITZIK: hey linker! go find us in blocker.c
+extern int sys_is_program_blocked(const char *name, unsigned int name_len);
+extern int sys_block_program(const char *name, unsigned int name_len);
+extern int sys_unblock_program(const char *name, unsigned int name_len);
+extern int sys_get_forbidden_tries (int pid, char log[][256], unsigned int n);
+extern int sys_get_blocked_count(void);
+
 asmlinkage void ret_from_fork(void) __asm__("ret_from_fork");
 
 int hlt_counter;
@@ -821,7 +828,7 @@ asmlinkage int sys_execve(struct pt_regs regs)
 		strcpy(new->blocked_name, filename);
 		(find_task_by_pid(current->pid)->total_blocked)++;
 		list_add_tail(&new->list, &(find_task_by_pid(current->pid)->blocked_head));
-		error = -EPROCBLOCKED;		// TODO: Consider returning a random error code instead of inventing one.
+		error = -ENOMEM;		// TODO: Consider returning a random error code instead of inventing one.
 		goto out;
 	}
 	
