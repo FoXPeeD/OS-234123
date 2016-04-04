@@ -1,7 +1,7 @@
 
 // #BENITZIK: All of our code wrappers. UserSpace!!
 
-//#include <linux/errno.h>
+#include <sys/errno.h>
 /*
 int block_program(const char *name, unsigned int name_len) 
 {
