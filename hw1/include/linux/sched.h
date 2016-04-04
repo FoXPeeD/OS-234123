@@ -30,7 +30,13 @@ extern unsigned long event;
 
 // BENITZIK: Included dependencies.
 #include <linux/list.h>
-#include <linux/blocker.h>
+#include "../blocker.h"
+
+// New struct for list of blocked attempts.
+struct blocked_programs_t {
+	struct list_head list;
+	char* blocked_name[256];
+};
 
 struct exec_domain;
 

@@ -1,19 +1,11 @@
 
-// #BENITZIK: All of our code wrappers.
+// #BENITZIK: All of our code wrappers. UserSpace!!
 
-#include <errno.h>
-
-// New struct for list of blocked attempts.
-struct blocked_programs_t {
-	struct list_head list;
-	char* blocked_name[256];
-};
-
-struct blocked_programs_t blacklist_programs;
+//#include <linux/errno.h>
 
 int block_program(const char *name, unsigned int name_len) 
 {
-	unsigned int res;
+	extern unsigned int res;
 	__asm__
 	(
 		"int $0x80;"
@@ -32,7 +24,7 @@ int block_program(const char *name, unsigned int name_len)
 int unblock_program (const char *name, unsigned int
 name_len) 
 {
-	unsigned int res;
+	extern unsigned int res;
 	__asm__
 	(
 		"int $0x80;"
@@ -50,7 +42,7 @@ name_len)
 
 int is_program_blocked(const char *name, unsigned int name_len)
 {
-	unsigned int res;
+	extern unsigned int res;
 	__asm__
 	(
 		"int $0x80;"
@@ -68,7 +60,7 @@ int is_program_blocked(const char *name, unsigned int name_len)
 
 int get_blocked_count (void)
 {
-	unsigned int res;
+	extern unsigned int res;
 	__asm__
 	(
 		"int $0x80;"
@@ -86,7 +78,7 @@ int get_blocked_count (void)
 
 int get_forbidden_tries (int pid, char log[][256], unsigned int n)
 {
-	unsigned int res;
+	extern unsigned int res;
 	__asm__
 	(
 		"int $0x80;"

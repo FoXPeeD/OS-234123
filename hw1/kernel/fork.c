@@ -788,7 +788,6 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	// #BENITZIK: Init added sched variables.
 	// TODO: Check INIT_LIST_HEAD vs LIST_HEAD and see which we want.
 	INIT_LIST_HEAD(p->head);
-	p->head = NULL;
 	p->total_blocked = 0;
 	
 fork_out:
