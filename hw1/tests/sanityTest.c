@@ -14,8 +14,8 @@
 int main(){
 
 	const char* name = "hello\0";
-	const char* name1 = "/root/myTests/dummy1";
-	char *argva[] = {"/root/myTests/dummy1", 0};
+	const char* name1 = "/root/dummy1";
+	char *argva[] = {"/root/dummy1", 0};
 	unsigned int name_len = 6;
 	int pid = 50;
 	unsigned int n = 13;
