@@ -13,35 +13,45 @@
 
 int main(){
 
-	const char* name = "hello\0";
+	const char* name = "hello";
 	const char* name1 = "/root/myTests/dummy1";
 	char *argva[] = {"/root/myTests/dummy1", 0};
-	unsigned int name_len = 6;
+	unsigned int name_len = 5;
 	int pid = 50;
 	unsigned int n = 13;
 	char ret_log[n][256];
+	int res;
+	
+	//printf("running execve\n");
+	//execve(name1,argva);
+	//printf("after execve");
+	
+/*
+	res = block_program(name, name_len);
+	printf("block_program: %d\n", res);
+	//assert(res == 1);
+*/	
+	res = unblock_program(name, name_len);
+	printf("unblock_program: %d\n", res);
+	//assert(res == 1);
 
-	printf("running execve\n");
-	execve(name1,argva);
-	printf("after execve");
+	
+	res = is_program_blocked(name, name_len);
+	printf("is_program_blocked: %d\n", res);
+	//assert(res == 1);
+
+/*	
+	res = get_blocked_count();
+	printf("get_blocked_count: %d\n", res);
+	assert(res == 1);
+
+	
+	res = get_forbidden_tries(pid,ret_log,n);
+	printf("get_forbidden_tries: %d\n", res);
+	assert(res == 1);
+*/
+	//WOOOOHOOOOO
 	
 	
-	printf("\nblock_program");
-	block_program(name, name_len);
-//	assert(block_program(name, name_len)==1);
-	printf("\nunblock_program");
-	unblock_program(name, name_len);
-//	assert(unblock_program(name, name_len)==2);
-	printf("\nis_program_blocked");
-	is_program_blocked(name, name_len);
-//	assert(is_program_blocked(name, name_len)==3);
-	printf("\nget_blocked_count");
-	get_blocked_count();
-//	assert(get_blocked_count()==4);
-	printf("\nget_forbidden_tries");
-	get_forbidden_tries(pid,ret_log,n);
-//	assert(get_forbidden_tries(pid,ret_log,n)==5);
-
-
 	return 0;
 }

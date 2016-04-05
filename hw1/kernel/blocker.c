@@ -39,7 +39,7 @@ int sys_is_program_blocked(const char *name, unsigned int name_len)
 
 int sys_block_program(const char *name, unsigned int name_len)
 {
-	printk("In Function: sys_unblock_program %s %d\n", name, name_len);
+	printk("In Function: sys_block_program %s %d\n", name, name_len);
 	
 	if ((name == NULL) || (name_len == 0))
 		return -EINVAL;
@@ -59,6 +59,8 @@ int sys_block_program(const char *name, unsigned int name_len)
 
 int sys_unblock_program(const char *name, unsigned int name_len)
 {
+	printk("In Function: sys_unblock_program %s %d\n", name, name_len);
+	
 	if ((name == NULL) || (name_len == 0))
 		return -EINVAL;
 
@@ -66,7 +68,6 @@ int sys_unblock_program(const char *name, unsigned int name_len)
 	struct list_head *ptr2;
 	struct blacklist_programs_t *entry;
 	
-	printk("In Function: sys_unblock_program %s %d\n", name, name_len);
 
 	list_for_each_safe(ptr, ptr2, &blacklist_head)
 	{

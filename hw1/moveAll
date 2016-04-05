@@ -2,6 +2,6 @@
 
 cd "/mnt/hgfs/C/Users/Benjamin Weiss/Documents/Technion/Operating Systems/OS-bwis/hw1"
 
-cp _moveAll		/usr/src/linux-2.4.18-14custom/
+cp _moveAll		/root/
 
-source ./_moveAll
+source /root/_moveAll

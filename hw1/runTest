@@ -1,0 +1,7 @@
+#!/bin/bash
+
+./moveAll
+
+cd hw1
+gcc sanityTest.c
+./a.out
