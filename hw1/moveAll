@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd "/mnt/hgfs/C/Users/Benjamin Weiss/Documents/Technion/Operating Systems/OS-bwis/hw1"
+
+cp _moveAll		/usr/src/linux-2.4.18-14custom/
+
+source ./_moveAll
