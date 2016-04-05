@@ -18,7 +18,7 @@ int total_blocked = 0;
 
 int sys_is_program_blocked(const char *name, unsigned int name_len)
 {
-	printk("In Function: sys_is_program_blocked %s %d", name, name_len);
+	printk("In Function: sys_is_program_blocked %s %d\n", name, name_len);
 	
 	struct list_head *ptr;
 	struct blacklist_programs_t *entry;
@@ -39,7 +39,7 @@ int sys_is_program_blocked(const char *name, unsigned int name_len)
 
 int sys_block_program(const char *name, unsigned int name_len)
 {
-	printk("In Function: sys_unblock_program %s %d", name, name_len);
+	printk("In Function: sys_unblock_program %s %d\n", name, name_len);
 	
 	if ((name == NULL) || (name_len == 0))
 		return -EINVAL;
@@ -66,7 +66,7 @@ int sys_unblock_program(const char *name, unsigned int name_len)
 	struct list_head *ptr2;
 	struct blacklist_programs_t *entry;
 	
-	printk("In Function: sys_unblock_program %s %d", name, name_len);
+	printk("In Function: sys_unblock_program %s %d\n", name, name_len);
 
 	list_for_each_safe(ptr, ptr2, &blacklist_head)
 	{
@@ -84,24 +84,24 @@ int sys_unblock_program(const char *name, unsigned int name_len)
 
 int sys_get_blocked_count(void)
 {
-	printk("In Function: sys_get_blocked_count");
+	printk("In Function: sys_get_blocked_count\n");
 	
 	return total_blocked;
 }
 
 int sys_get_forbidden_tries (int pid, char log[][256], unsigned int n)
 {
-	printk("In Dummy Function: sys_get_forbidden_tries %d %d", pid, n);	// Didnt print log
+	printk("In Function: sys_get_forbidden_tries %d %d\n", pid, n);	// Didnt print log
 
 	if (n == 0)
 		return -EINVAL;
 	
-	if (!find_task_by_pid(current->pid))
+	if (!find_task_by_pid(pid))
 		return -ESRCH;
 	
 	// TODO: Body of function
 	if (1)
 		return -EFAULT;
 	
-	return find_task_by_pid(current->pid)->total_blocked;
+	return find_task_by_pid(pid)->total_blocked;
 }
