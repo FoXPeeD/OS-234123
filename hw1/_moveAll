@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cp blocker.h					/usr/src/linux-2.4.18-14custom/
-cp -r tests						/usr/src/linux-2.4.18-14custom/
+cp -r -f tests						/usr/src/linux-2.4.18-14custom/
 cp arch/i386/kernel/entry.S		/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
 cp arch/i386/kernel/process.c	/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
 cp include/asm-i386/unistd.h	/usr/src/linux-2.4.18-14custom/include/asm-i386/
