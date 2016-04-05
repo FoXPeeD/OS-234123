@@ -7,6 +7,9 @@
 
 
 #include "blocker.h"
+#include "test_utilities.h"
+#include <assert.h>
+
 
 int main(){
 
@@ -17,13 +20,11 @@ int main(){
 	char ret_log[n][256];
 
 
-	block_program(name, name_len);
-	unblock_program(name, name_len);
-	is_program_blocked(name, name_len);
-	get_blocked_count();
-	get_forbidden_tries(pid,ret_log,n);
-
-
+	assert(block_program(name, name_len)==1);
+	assert(unblock_program(name, name_len)==2);
+	assert(is_program_blocked(name, name_len)==3);
+	assert(get_blocked_count()==4);
+	assert(get_forbidden_tries(pid,ret_log,n)==5);
 
 
 	return 0;
