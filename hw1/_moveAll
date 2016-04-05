@@ -9,5 +9,6 @@ cp include/linux/sched.h		/usr/src/linux-2.4.18-14custom/include/linux/
 cp kernel/Makefile				/usr/src/linux-2.4.18-14custom/kernel/
 cp kernel/blocker.c				/usr/src/linux-2.4.18-14custom/kernel/
 cp kernel/fork.c				/usr/src/linux-2.4.18-14custom/kernel/
+cp ../compileKernel /root/
 
 echo Done copying!
