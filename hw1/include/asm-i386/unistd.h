@@ -247,6 +247,11 @@
 #define __NR_futex		240
 #define __NR_sched_setaffinity	241
 #define __NR_sched_getaffinity	242
+#define __NR_block_program	243		/* #BENITZIK */
+#define __NR_unblock_program	244
+#define __NR_is_program_blocked	245
+#define __NR_get_blocked_count	246
+#define __NR_get_forbidden_tries	247
 
 /* user-visible error numbers are in the range -1 - -124: see <asm-i386/errno.h> */
 
