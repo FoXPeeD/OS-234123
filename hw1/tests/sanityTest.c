@@ -19,12 +19,21 @@ int main(){
 	unsigned int n = 13;
 	char ret_log[n][256];
 
-
-	assert(block_program(name, name_len)==1);
-	assert(unblock_program(name, name_len)==2);
-	assert(is_program_blocked(name, name_len)==3);
-	assert(get_blocked_count()==4);
-	assert(get_forbidden_tries(pid,ret_log,n)==5);
+	printf("\nblock_program");
+	block_program(name, name_len);
+//	assert(block_program(name, name_len)==1);
+	printf("\nunblock_program");
+	unblock_program(name, name_len);
+//	assert(unblock_program(name, name_len)==2);
+	printf("\nis_program_blocked");
+	is_program_blocked(name, name_len);
+//	assert(is_program_blocked(name, name_len)==3);
+	printf("\nget_blocked_count");
+	get_blocked_count();
+//	assert(get_blocked_count()==4);
+	printf("\nget_forbidden_tries");
+	get_forbidden_tries(pid,ret_log,n);
+//	assert(get_forbidden_tries(pid,ret_log,n)==5);
 
 
 	return 0;
