@@ -1,7 +1,5 @@
 #!/bin/bash
 
-cd "/mnt/hgfs/C/Users/Benjamin Weiss/Documents/Technion/Operating Systems/OS-bwis/hw1"
-
 cp blocker.h					/usr/src/linux-2.4.18-14custom/
 cp -r tests						/usr/src/linux-2.4.18-14custom/
 cp arch/i386/kernel/entry.S		/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
