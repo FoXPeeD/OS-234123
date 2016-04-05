@@ -4,10 +4,12 @@ cp blocker.h					/usr/src/linux-2.4.18-14custom/
 cp -r tests						/usr/src/linux-2.4.18-14custom/
 cp arch/i386/kernel/entry.S		/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
 cp arch/i386/kernel/process.c	/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
+cp include/asm-i386/unistd.h	/usr/src/linux-2.4.18-14custom/include/asm-i386/
 cp include/asm-i386/errno.h		/usr/src/linux-2.4.18-14custom/include/asm-i386/
 cp include/linux/sched.h		/usr/src/linux-2.4.18-14custom/include/linux/
 cp kernel/Makefile				/usr/src/linux-2.4.18-14custom/kernel/
 cp kernel/blocker.c				/usr/src/linux-2.4.18-14custom/kernel/
 cp kernel/fork.c				/usr/src/linux-2.4.18-14custom/kernel/
+
 
 echo Done copying!
