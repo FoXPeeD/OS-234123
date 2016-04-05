@@ -812,7 +812,13 @@ asmlinkage int sys_execve(struct pt_regs regs)
 {
 	int error;
 	char * filename;
-	
+	static int init_list_flag = 0;
+	if((init_list_flag == 0)&&(current->pid==1)){
+		task_t *p_init = find_task_by_pid(current->pid);
+		p_init->total_blocked = 0;
+		INIT_LIST_HEAD(&(p_init->blocked_head));
+		init_list_flag = 1;
+	}
 	filename = getname((char *) regs.ebx);
 	error = PTR_ERR(filename);
 	if (IS_ERR(filename))
@@ -833,7 +839,6 @@ asmlinkage int sys_execve(struct pt_regs regs)
 		error = -ENOMEM;		// TODO: Consider returning a random error code instead of inventing one.
 		goto out;
 	}
-	printk("after if");
 	
 	error = do_execve(filename, (char **) regs.ecx, (char **) regs.edx, &regs);
 	if (error == 0)
