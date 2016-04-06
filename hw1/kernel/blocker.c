@@ -54,8 +54,11 @@ int sys_block_program(const char *name, unsigned int name_len)
 		return -ENOMEM;
 	
 	INIT_LIST_HEAD(&new->blacklist_member);
-	
-	strcpy(new->blocked_name, name);
+	if(! access_ok(VERIFY_READ,name,name_len ){
+		kfree(new);
+		return -EINVAL;
+	}
+	unsigned int not_copied = copy_from_user(new->blocked_name,name,name_len);
 	list_add_tail(&(new->blacklist_member), &blacklist_head);
 	total_blocked++;
 	printk("malloc'd new struct %s\n", new->blocked_name);
