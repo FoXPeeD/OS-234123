@@ -17,9 +17,8 @@ struct blacklist_programs_t {
 LIST_HEAD(blacklist_head);
 int total_blocked = 0;
 
-int sys_is_program_blocked(const char *name, unsigned int name_len)
+/*int sys_is_program_blocked(const char *name, unsigned int name_len)
 {
-	
 	struct list_head *ptr;
 	struct blacklist_programs_t *entry;
 	
@@ -30,6 +29,7 @@ int sys_is_program_blocked(const char *name, unsigned int name_len)
 		return -EFAULT;
 	
 	char tmpName[256] = {0};
+	// BUG: Nothing runs, probably because of copy_from_user when called from KernelSpace.
 	unsigned int not_copied = copy_from_user(tmpName,name,sizeof(char)*(name_len+1));
 	if (not_copied)
 		return -EFAULT;
@@ -41,6 +41,27 @@ int sys_is_program_blocked(const char *name, unsigned int name_len)
 		if (strcmp(entry->blocked_name, tmpName) == 0)
 		{
 			printk("sys_is_program_blocked(%s) = TRUE!!!\n", tmpName);
+			return 1;
+		}
+	}
+	
+	return 0;
+} */
+int sys_is_program_blocked(const char *name, unsigned int name_len)
+{
+	struct list_head *ptr;
+	struct blacklist_programs_t *entry;
+	
+	if ((name == NULL) || (name_len == 0))
+		return -EINVAL;
+
+	list_for_each(ptr, &blacklist_head)
+	{
+		entry = list_entry(ptr, struct blacklist_programs_t, blacklist_member);
+		printk("Checking %s == %s?\n", entry->blocked_name, name);
+		if (strcmp(entry->blocked_name, name) == 0)
+		{
+			printk("sys_is_program_blocked(%s) = TRUE!!!\n", name);
 			return 1;
 		}
 	}
