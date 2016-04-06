@@ -286,6 +286,7 @@ bool log_test() {
 
 int main() {
 	RUN_TEST(unblock_test);
+	return 0;
 	RUN_TEST(get_blocked_count_test);
 	RUN_TEST(is_program_blocked_test);
 	RUN_TEST(log_test);

@@ -18,8 +18,6 @@ int total_blocked = 0;
 
 int sys_is_program_blocked(const char *name, unsigned int name_len)
 {
-	printk("In Function: sys_is_program_blocked %s %d\n", name, name_len);
-	
 	struct list_head *ptr;
 	struct blacklist_programs_t *entry;
 	
@@ -29,8 +27,12 @@ int sys_is_program_blocked(const char *name, unsigned int name_len)
 	list_for_each(ptr, &blacklist_head)
 	{
 		entry = list_entry(ptr, struct blacklist_programs_t, blacklist_member);
-		if (strcmp(entry->blocked_name, name))
+		printk("Checking %s == %s?\n", entry->blocked_name, name);
+		if (strcmp(entry->blocked_name, name) == 0)
+		{
+			printk("sys_is_program_blocked(%s) = TRUE!!!\n", name, name_len);
 			return 1;
+		}
 	}
 	
 	return 0;
@@ -47,13 +49,16 @@ int sys_block_program(const char *name, unsigned int name_len)
 	if (sys_is_program_blocked(name, name_len))
 		return 1;
 	
-	struct blacklist_programs_t *new = (struct blacklist_programs_t *)kmalloc(sizeof(struct blacklist_programs_t), 0);
+	struct blacklist_programs_t *new = (struct blacklist_programs_t *)kmalloc(sizeof(struct blacklist_programs_t), GFP_KERNEL);
 	if (!new)
 		return -ENOMEM;
+	
+	INIT_LIST_HEAD(&new->blacklist_member);
 	
 	strcpy(new->blocked_name, name);
 	list_add_tail(&(new->blacklist_member), &blacklist_head);
 	total_blocked++;
+	printk("malloc'd new struct %s\n", new->blocked_name);
 	return 0;
 }
 
@@ -72,7 +77,7 @@ int sys_unblock_program(const char *name, unsigned int name_len)
 	list_for_each_safe(ptr, ptr2, &blacklist_head)
 	{
 		entry = list_entry(ptr, struct blacklist_programs_t, blacklist_member);
-		if (strcmp(entry->blocked_name, name))
+		if (strcmp(entry->blocked_name, name) == 0)
 		{
 			list_del(&entry->blacklist_member);
 			total_blocked--;

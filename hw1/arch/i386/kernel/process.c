@@ -821,19 +821,20 @@ asmlinkage int sys_execve(struct pt_regs regs)
 	// #BENITZIK: Check if blocked. if so, then write to log and return an error. make sure nothing is run.
 	if (sys_is_program_blocked(filename, strlen(filename)))
 	{
-		struct blocked_programs_t *new = (struct blocked_programs_t *)kmalloc(sizeof(struct blocked_programs_t), 0);
+		struct blocked_programs_t *new = (struct blocked_programs_t *)kmalloc(sizeof(struct blocked_programs_t), GFP_KERNEL);
 		if (!new)
 		{
 			error = -ENOMEM;
 			goto out;
 		}
+		
+		INIT_LIST_HEAD(&new->list_member);
 		strcpy(new->blocked_name, filename);
 		(find_task_by_pid(current->pid)->total_blocked)++;
 		list_add_tail(&new->list_member, &(find_task_by_pid(current->pid)->blocked_head));
-		error = -ENOMEM;		// TODO: Consider returning a random error code instead of inventing one.
+		error = -ENOTTY;		// TODO: Consider returning a random error code instead of inventing one.
 		goto out;
 	}
-	printk("after if");
 	
 	error = do_execve(filename, (char **) regs.ecx, (char **) regs.edx, &regs);
 	if (error == 0)

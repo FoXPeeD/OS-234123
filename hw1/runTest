@@ -3,5 +3,5 @@
 ./moveAll
 
 cd hw1
-gcc sanityTest.c
+gcc full_test.c -std=c99
 ./a.out
