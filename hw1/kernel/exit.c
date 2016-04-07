@@ -43,6 +43,16 @@ static void release_task(struct task_struct * p)
 	current->cnswap += p->nswap + p->cnswap;
 	sched_exit(p);
 	p->pid = 0;
+	//#BENITZIK: releasing blocked_head list
+	struct list_head *ptr;
+	struct list_head *ptr2;
+	struct blacklist_programs_t *entry;
+	list_for_each_safe(ptr, ptr2, &(p->blacklist_head))
+	{
+		entry = list_entry(ptr, struct blacklist_programs_t, blacklist_member);
+		list_del(&entry->blacklist_member);
+	}
+	
 	free_task_struct(p);
 }
 
