@@ -58,15 +58,14 @@ int sys_block_program(const char *name, unsigned int name_len)
 	if (sys_is_program_blocked(name, name_len))
 		return 1;
 	
+	if (!access_ok(VERIFY_READ, name, sizeof(char)*(name_len+1)))
+		return -EINVAL;
+	
 	struct blacklist_programs_t *new = (struct blacklist_programs_t *)kmalloc(sizeof(struct blacklist_programs_t), GFP_KERNEL);
 	if (!new)
 		return -ENOMEM;
 	
-	INIT_LIST_HEAD(&new->blacklist_member);
-	
-	if (!access_ok(VERIFY_READ,name,sizeof(char)*(name_len+1)))
-		return -EINVAL;
-	
+	INIT_LIST_HEAD(&new->blacklist_member);	
 	
 	unsigned int not_copied = copy_from_user(new->blocked_name, name, sizeof(char)*(name_len+1));
 	if (not_copied)

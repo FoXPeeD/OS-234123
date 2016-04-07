@@ -84,6 +84,8 @@ bool get_blocked_count_test() {
     const char* name3 = "prog3";
 	block_program(name1, 5);
 	ASSERT_TEST(get_blocked_count() == 1);
+	block_program(name1, 5);
+	ASSERT_TEST(get_blocked_count() == 1);
 	block_program(name2, 5);
 	ASSERT_TEST(get_blocked_count() == 2);
 	unblock_program(name1, 5);
@@ -225,13 +227,15 @@ bool log_test() {
 
   	init_log(log, log_len);
 	
-//	for(int i = 0; i < log_len; i++) {
-//		printf("log[%d]: %s\n", i, log[i]);
-//  	}
-//	printf("gft: %d == %d?\n", get_forbidden_tries(getpid(), log, 40), log_len);
- 	ASSERT_TEST(get_forbidden_tries(getpid(), log, 40) == log_len);
+	//printf("gft: %d == %d?\n", get_forbidden_tries(getpid(), log, 40), log_len);
+	//printf("Done checking values");
+	//return true;
+	//for(int i = 0; i < log_len; i++) {
+	//	printf("log[%d]: %s\n", i, log[i]);
+  	//}
+	ASSERT_TEST(get_forbidden_tries(getpid(), log, 40) == log_len);
 	
-
+// 	return true;
   	for(int i = 0; i < log_len; i++) {
   		switch(i) {
   			case 0 :
@@ -295,8 +299,8 @@ int main() {
 	RUN_TEST(unblock_test);
 	RUN_TEST(get_blocked_count_test);
 	RUN_TEST(is_program_blocked_test);
-	RUN_TEST(block_program_test);
 	RUN_TEST(log_test);
+	RUN_TEST(block_program_test);
 	return 0;
 }
 
