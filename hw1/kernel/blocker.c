@@ -17,36 +17,7 @@ struct blacklist_programs_t {
 LIST_HEAD(blacklist_head);
 int total_blocked = 0;
 
-/*int sys_is_program_blocked(const char *name, unsigned int name_len)
-{
-	struct list_head *ptr;
-	struct blacklist_programs_t *entry;
-	
-	if ((name == NULL) || (name_len == 0))
-		return -EINVAL;
-	
-	if (!access_ok(VERIFY_READ,name,sizeof(char)*(name_len+1)))
-		return -EFAULT;
-	
-	char tmpName[256] = {0};
-	// BUG: Nothing runs, probably because of copy_from_user when called from KernelSpace.
-	unsigned int not_copied = copy_from_user(tmpName,name,sizeof(char)*(name_len+1));
-	if (not_copied)
-		return -EFAULT;
-	
-	list_for_each(ptr, &blacklist_head)
-	{
-		entry = list_entry(ptr, struct blacklist_programs_t, blacklist_member);
-		printk("Checking %s == %s?\n", entry->blocked_name, tmpName);
-		if (strcmp(entry->blocked_name, tmpName) == 0)
-		{
-			printk("sys_is_program_blocked(%s) = TRUE!!!\n", tmpName);
-			return 1;
-		}
-	}
-	
-	return 0;
-} */
+
 int sys_is_program_blocked(const char *name, unsigned int name_len)
 {
 	struct list_head *ptr;
@@ -60,21 +31,19 @@ int sys_is_program_blocked(const char *name, unsigned int name_len)
 	{
 		unsigned int not_copied = copy_from_user(tmpName, name, sizeof(char)*(name_len+1));
 		if (not_copied)
-			return -EFAULT;
+			return -EINVAL;
 		name = (char*)tmpName;
 	}
 	
 	list_for_each(ptr, &blacklist_head)
 	{
 		entry = list_entry(ptr, struct blacklist_programs_t, blacklist_member);
-		printk("Checking %s == %s?\n", entry->blocked_name, name);
 		if (strcmp(entry->blocked_name, name) == 0)
 		{
-			printk("sys_is_program_blocked(%s) = TRUE!!!\n", name);
+			printk("Blocked %d from running\n", name);
 			return 1;
 		}
 	}
-	
 	return 0;
 }
 
@@ -96,13 +65,15 @@ int sys_block_program(const char *name, unsigned int name_len)
 	INIT_LIST_HEAD(&new->blacklist_member);
 	
 	if (!access_ok(VERIFY_READ,name,sizeof(char)*(name_len+1)))
-	{
-		kfree(new);
-		return -EFAULT;
-	}
+		return -EINVAL;
+	
+	
 	unsigned int not_copied = copy_from_user(new->blocked_name, name, sizeof(char)*(name_len+1));
 	if (not_copied)
-		return -EFAULT;
+	{
+		kfree(new);
+		return -EINVAL;
+	}
 	
 	list_add_tail(&(new->blacklist_member), &blacklist_head);
 	total_blocked++;
@@ -122,13 +93,12 @@ int sys_unblock_program(const char *name, unsigned int name_len)
 	struct blacklist_programs_t *entry;
 	
 	if (!access_ok(VERIFY_READ,name,sizeof(char)*(name_len+1)))
-	{
-		return -EFAULT;
-	}
+		return -EINVAL;
+	
 	char tmpName[256] = {0};
 	unsigned int not_copied = copy_from_user(tmpName, name, sizeof(char)*(name_len+1));
 	if (not_copied)
-		return -EFAULT;
+		return -EINVAL;
 	
 	list_for_each_safe(ptr, ptr2, &blacklist_head)
 	{
@@ -161,11 +131,14 @@ int sys_get_forbidden_tries (int pid, char log[][256], unsigned int n)
 	if (!find_task_by_pid(pid))
 		return -ESRCH;
 	
-	if (!access_ok(VERIFY_WRITE, log, sizeof(char)*256*n))
+	task_t* pid_struct = find_task_by_pid(pid);
+	
+	int min = n <= pid_struct->total_blocked ? n : pid_struct->total_blocked;
+	
+	if (!access_ok(VERIFY_WRITE, log, sizeof(char)*256*min))
 		return -EFAULT;
 	
 	
-	task_t* pid_struct = find_task_by_pid(pid);
 	struct list_head *ptr = &pid_struct->blocked_head;
 	struct blacklist_programs_t *entry;
 	int iter_log = 0;
@@ -174,12 +147,12 @@ int sys_get_forbidden_tries (int pid, char log[][256], unsigned int n)
 		entry = list_entry(ptr, struct blocked_programs_t, list_member);
 		unsigned int not_copied = copy_to_user(log[iter_log], entry->blocked_name, sizeof(char)*256);
 		if (not_copied)
-			return -EFAULT;
+			return -EFAULT-1;
 	
 		iter_log++;
-		if ((iter_log >= pid_struct->total_blocked) || (iter_log >= n))
+		if (iter_log >= min)
 			return iter_log;
 	}
 	
-	return pid_struct->total_blocked;
+	return pid_struct->total_blocked; // aka: return 0;
 }
