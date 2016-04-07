@@ -226,16 +226,8 @@ bool log_test() {
   	}
 
   	init_log(log, log_len);
-	
-	//printf("gft: %d == %d?\n", get_forbidden_tries(getpid(), log, 40), log_len);
-	//printf("Done checking values");
-	//return true;
-	//for(int i = 0; i < log_len; i++) {
-	//	printf("log[%d]: %s\n", i, log[i]);
-  	//}
 	ASSERT_TEST(get_forbidden_tries(getpid(), log, 40) == log_len);
 	
-// 	return true;
   	for(int i = 0; i < log_len; i++) {
   		switch(i) {
   			case 0 :
