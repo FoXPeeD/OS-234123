@@ -1602,6 +1602,10 @@ void __init init_idle(task_t *idle, int cpu)
 	idle->prio = MAX_PRIO;
 	idle->state = TASK_RUNNING;
 	idle->cpu = cpu;
+	//BENITZIK: initialazing blocked_head and total_blocked
+	p->total_blocked = 0;
+	INIT_LIST_HEAD(&(p->blocked_head));
+	
 	double_rq_unlock(idle_rq, rq);
 	set_tsk_need_resched(idle);
 	__restore_flags(flags);
