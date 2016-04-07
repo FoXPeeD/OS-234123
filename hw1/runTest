@@ -3,5 +3,9 @@
 ./moveAll
 
 cd hw1
+
 gcc full_test.c -std=c99
+./a.out
+
+gcc test1.c
 ./a.out
