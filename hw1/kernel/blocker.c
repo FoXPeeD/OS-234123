@@ -137,7 +137,7 @@ int sys_get_forbidden_tries (int pid, char log[][256], unsigned int n)
 		entry = list_entry(ptr, struct blocked_programs_t, list_member);
 		unsigned int not_copied = copy_to_user(log[iter_log], entry->blocked_name, sizeof(char)*256);
 		if (not_copied)
-			return -EFAULT-1;
+			return -EFAULT;
 	
 		iter_log++;
 		if (iter_log >= min)
