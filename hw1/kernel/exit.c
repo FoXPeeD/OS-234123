@@ -46,7 +46,7 @@ static void release_task(struct task_struct * p)
 	//#BENITZIK: releasing blocked_head list
 	struct list_head *ptr;
 	struct list_head *ptr2;
-	struct blacklist_programs_t *entry;
+	struct blocked_programs_t *entry;
 	list_for_each_safe(ptr, ptr2, &(p->blocked_head))
 	{
 		entry = list_entry(ptr, struct blocked_programs_t, list_member);
