@@ -91,7 +91,7 @@ int get_forbidden_tries (int pid, char log[][256], unsigned int n)
 		: "0" (247) ,"b" (pid) ,"c" (log), "d" (n)
 		: "memory"
 	);
-	//printf("[res=%d]",res);
+	printf("[res=%d]",res);
 	if (res>= (unsigned long)(-125))
 	{
 		errno = -res;

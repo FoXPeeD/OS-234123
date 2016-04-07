@@ -54,7 +54,16 @@ int sys_is_program_blocked(const char *name, unsigned int name_len)
 	
 	if ((name == NULL) || (name_len == 0))
 		return -EINVAL;
-
+	
+	char tmpName[256] = {0};
+	if (access_ok(VERIFY_READ, name, sizeof(char)*(name_len + 1)))
+	{
+		unsigned int not_copied = copy_from_user(tmpName, name, sizeof(char)*(name_len+1));
+		if (not_copied)
+			return -EFAULT;
+		name = (char*)tmpName;
+	}
+	
 	list_for_each(ptr, &blacklist_head)
 	{
 		entry = list_entry(ptr, struct blacklist_programs_t, blacklist_member);
@@ -91,7 +100,7 @@ int sys_block_program(const char *name, unsigned int name_len)
 		kfree(new);
 		return -EFAULT;
 	}
-	unsigned int not_copied = copy_from_user(new->blocked_name,name,sizeof(char)*(name_len+1));
+	unsigned int not_copied = copy_from_user(new->blocked_name, name, sizeof(char)*(name_len+1));
 	if (not_copied)
 		return -EFAULT;
 	
@@ -117,7 +126,7 @@ int sys_unblock_program(const char *name, unsigned int name_len)
 		return -EFAULT;
 	}
 	char tmpName[256] = {0};
-	unsigned int not_copied = copy_from_user(tmpName,name,sizeof(char)*(name_len+1));
+	unsigned int not_copied = copy_from_user(tmpName, name, sizeof(char)*(name_len+1));
 	if (not_copied)
 		return -EFAULT;
 	
@@ -152,8 +161,7 @@ int sys_get_forbidden_tries (int pid, char log[][256], unsigned int n)
 	if (!find_task_by_pid(pid))
 		return -ESRCH;
 	
-	// TODO: Body of function
-	if (!access_ok(VERIFY_WRITE,log,sizeof(char)*256*n))
+	if (!access_ok(VERIFY_WRITE, log, sizeof(char)*256*n))
 		return -EFAULT;
 	
 	
@@ -164,7 +172,7 @@ int sys_get_forbidden_tries (int pid, char log[][256], unsigned int n)
 	list_for_each(ptr, &(pid_struct->blocked_head))
 	{
 		entry = list_entry(ptr, struct blocked_programs_t, list_member);
-		unsigned int not_copied = copy_to_user(log[iter_log][256], entry->blocked_name, sizeof(char)*256);
+		unsigned int not_copied = copy_to_user(log[iter_log], entry->blocked_name, sizeof(char)*256);
 		if (not_copied)
 			return -EFAULT;
 	

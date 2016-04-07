@@ -212,6 +212,12 @@ bool log_test() {
   	ASSERT_TEST(get_forbidden_tries(getpid(), log, 0) == -1);
   	ASSERT_TEST(errno == EINVAL);
 
+	printf("total tries for %d: %d\n", getpid(), get_forbidden_tries(getpid(), log, 1));
+//	for(int i = 0; log[i]; i++) {
+//  		printf("%s", log[i]);
+//  	}
+
+	
 	ASSERT_TEST(get_forbidden_tries(getpid(), log, 1) == 1);
   	for(int i = 0; i < log_len; i++) {
   		switch(i) {
@@ -285,11 +291,11 @@ bool log_test() {
 }
 
 int main() {
-	RUN_TEST(unblock_test);
+/*	RUN_TEST(unblock_test);
 	RUN_TEST(get_blocked_count_test);
 	RUN_TEST(is_program_blocked_test);
 	RUN_TEST(block_program_test);
-	RUN_TEST(log_test);
+*/	RUN_TEST(log_test);
 	return 0;
 }
 
