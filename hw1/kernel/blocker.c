@@ -40,7 +40,6 @@ int sys_is_program_blocked(const char *name, unsigned int name_len)
 		entry = list_entry(ptr, struct blacklist_programs_t, blacklist_member);
 		if (strcmp(entry->blocked_name, name) == 0)
 		{
-			printk("Blocked %d from running\n", name);
 			return 1;
 		}
 	}
@@ -50,8 +49,6 @@ int sys_is_program_blocked(const char *name, unsigned int name_len)
 
 int sys_block_program(const char *name, unsigned int name_len)
 {
-	printk("In Function: sys_block_program %s %d\n", name, name_len);
-	
 	if ((name == NULL) || (name_len == 0))
 		return -EINVAL;
 
@@ -82,8 +79,6 @@ int sys_block_program(const char *name, unsigned int name_len)
 
 int sys_unblock_program(const char *name, unsigned int name_len)
 {
-	printk("In Function: sys_unblock_program %s %d\n", name, name_len);
-	
 	if ((name == NULL) || (name_len == 0))
 		return -EINVAL;
 
@@ -115,15 +110,11 @@ int sys_unblock_program(const char *name, unsigned int name_len)
 
 int sys_get_blocked_count(void)
 {
-	printk("In Function: sys_get_blocked_count\n");
-	
 	return total_blocked;
 }
 
 int sys_get_forbidden_tries (int pid, char log[][256], unsigned int n)
 {
-	printk("In Function: sys_get_forbidden_tries %d %d\n", pid, n);	// Didnt print log
-
 	if (n == 0)
 		return -EINVAL;
 	
