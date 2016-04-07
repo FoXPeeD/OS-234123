@@ -49,8 +49,8 @@ static void release_task(struct task_struct * p)
 	struct blacklist_programs_t *entry;
 	list_for_each_safe(ptr, ptr2, &(p->blocked_head))
 	{
-		entry = list_entry(ptr, struct blacklist_programs_t, blacklist_member);
-		list_del(&entry->blacklist_member);
+		entry = list_entry(ptr, struct blocked_programs_t, list_member);
+		list_del(&entry->list_member);
 	}
 	
 	free_task_struct(p);
