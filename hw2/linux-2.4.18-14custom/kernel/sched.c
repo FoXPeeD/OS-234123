@@ -1167,7 +1167,8 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	else {
 		retval = -EINVAL;
 		if (policy != SCHED_FIFO && policy != SCHED_RR &&
-				policy != SCHED_OTHER)
+				policy != SCHED_OTHER && policy != SCHED_SHORT &&	//#BENITZIK
+				policy != SCHED_OVERDUE_SHORT)
 			goto out_unlock;
 	}
 

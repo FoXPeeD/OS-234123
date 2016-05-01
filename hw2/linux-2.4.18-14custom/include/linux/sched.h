@@ -119,11 +119,13 @@ extern unsigned long nr_uninterruptible(void);
 #define SCHED_OTHER		0
 #define SCHED_FIFO		1
 #define SCHED_RR		2
-#define SCHED_SHORT		3	//#BENITZIK
-#define SCHED_OVERDUE_SHORT 	4
+#define SCHED_SHORT		5	//#BENITZIK
+#define SCHED_OVERDUE_SHORT 	6
 
 struct sched_param {
 	int sched_priority;
+	int cooloffs;
+	int req_time;
 };
 
 struct completion;
