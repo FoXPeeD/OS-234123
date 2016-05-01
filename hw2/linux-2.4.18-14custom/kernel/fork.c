@@ -583,6 +583,13 @@ static inline void copy_flags(unsigned long clone_flags, struct task_struct *p)
  * specific copy_thread() routine.  Most platforms ignore stack_top.
  * For an example that's using stack_top, see
  * arch/ia64/kernel/process.c.
+ *
+ *
+ *here we should do:
+ *update parent's params to half
+ *update child's params to half of parent
+ *
+ *
  */
 int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	    struct pt_regs *regs, unsigned long stack_size)

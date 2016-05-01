@@ -717,6 +717,11 @@ static inline void idle_tick(void)
 /*
  * This function gets called by the timer code, with HZ frequency.
  * We call it with interrupts disabled.
+ *
+ *we need to do:	
+ *reduce 1 from SHORT's time slice
+ *
+ *
  */
 void scheduler_tick(int user_tick, int system)
 {
@@ -796,6 +801,14 @@ void scheduling_functions_start_here(void) { }
 
 /*
  * 'schedule()' is the main scheduler function.
+ *
+ *
+ *we should do:
+ *
+ *
+ *
+ *
+ *
  */
 asmlinkage void schedule(void)
 {
@@ -1129,6 +1142,14 @@ static inline task_t *find_process_by_pid(pid_t pid)
 	return pid ? find_task_by_pid(pid) : current;
 }
 
+/*#BENITZIK	
+*we should change here:
+*allow SCHED_OTHER to be changed to SHORT
+*	check params(requested_time,numer_of_cooloffs) and init fields in task_t
+*SHORT w/ policy==-1 may be regerded as set_param
+*SHORT w/ policy!=-1 should return error
+*
+*/
 static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 {
 	struct sched_param lp;
@@ -1223,6 +1244,12 @@ asmlinkage long sys_sched_setparam(pid_t pid, struct sched_param *param)
 	return setscheduler(pid, -1, param);
 }
 
+/*
+ *we need to return requested_time and numer_of_cooloffs
+ *
+ *
+ *
+ */
 asmlinkage long sys_sched_getscheduler(pid_t pid)
 {
 	int retval = -EINVAL;
@@ -1241,6 +1268,7 @@ asmlinkage long sys_sched_getscheduler(pid_t pid)
 out_nounlock:
 	return retval;
 }
+
 
 asmlinkage long sys_sched_getparam(pid_t pid, struct sched_param *param)
 {
@@ -1407,7 +1435,7 @@ out_unlock:
 	return 0;
 }
 
-
+//#BENITZIK: should we touch this?
 asmlinkage long sys_sched_get_priority_max(int policy)
 {
 	int ret = -EINVAL;
@@ -1424,6 +1452,7 @@ asmlinkage long sys_sched_get_priority_max(int policy)
 	return ret;
 }
 
+//#BENITZIK: should we touch this?
 asmlinkage long sys_sched_get_priority_min(int policy)
 {
 	int ret = -EINVAL;

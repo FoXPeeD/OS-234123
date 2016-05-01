@@ -122,10 +122,10 @@ extern unsigned long nr_uninterruptible(void);
 #define SCHED_SHORT		5	//#BENITZIK
 #define SCHED_OVERDUE_SHORT 	6
 
-struct sched_param {
+struct sched_param {//#BENITZIK
 	int sched_priority;
-	int cooloffs;
-	int req_time;
+	int requested_time;
+	int numer_of_cooloffs;
 };
 
 struct completion;
