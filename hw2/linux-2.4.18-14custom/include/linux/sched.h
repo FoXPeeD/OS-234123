@@ -120,6 +120,7 @@ extern unsigned long nr_uninterruptible(void);
 #define SCHED_FIFO		1
 #define SCHED_RR		2
 #define SCHED_SHORT		3	//#BENITZIK
+#define SCHED_OVERDUE_SHORT 	4
 
 struct sched_param {
 	int sched_priority;
@@ -454,7 +455,6 @@ struct task_struct {
 	void *journal_info;
 	
 	//#BENITZIK
-	int is_overdue;
 	int cooloffs;
 	int cooloffs_left;
 	int req_time;
