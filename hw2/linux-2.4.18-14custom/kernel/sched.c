@@ -138,10 +138,11 @@ struct runqueue {
 	unsigned long nr_running, nr_switches, expired_timestamp;
 	signed long nr_uninterruptible;
 	task_t *curr, *idle;
-	prio_array_t *active, *expired, arrays[2];
+	prio_array_t *active, *expired, *short_array, *overdue_array, arrays[4]; //#BENITZIK
 	int prev_nr_running[NR_CPUS];
 	task_t *migration_thread;
 	list_t migration_queue;
+	int nr_sched_short;
 } ____cacheline_aligned;
 
 static struct runqueue runqueues[NR_CPUS] __cacheline_aligned;
@@ -1642,7 +1643,7 @@ extern void timer_bh(void);
 extern void tqueue_bh(void);
 extern void immediate_bh(void);
 
-void __init sched_init(void)
+void __init sched_init(void) 
 {
 	runqueue_t *rq;
 	int i, j, k;
@@ -1656,7 +1657,8 @@ void __init sched_init(void)
 		spin_lock_init(&rq->lock);
 		INIT_LIST_HEAD(&rq->migration_queue);
 
-		for (j = 0; j < 2; j++) {
+		//#BENITZIK: init for adding arrays like "active"(short_array,overdue_array)
+		for (j = 0; j < 4; j++) {	
 			array = rq->arrays + j;
 			for (k = 0; k < MAX_PRIO; k++) {
 				INIT_LIST_HEAD(array->queue + k);
@@ -1665,6 +1667,7 @@ void __init sched_init(void)
 			// delimiter for bitsearch
 			__set_bit(MAX_PRIO, array->bitmap);
 		}
+		nr_sched_short = 0;//#BENITZIK: init number of short threads
 	}
 	/*
 	 * We have to do a little magic to get the first
