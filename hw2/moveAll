@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd "/mnt/hgfs/OS-bwis/hw2"
+
+cp _moveAll		/root/
+
+source /root/_moveAll

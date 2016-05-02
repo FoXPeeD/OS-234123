@@ -142,7 +142,7 @@ struct runqueue {
 	int prev_nr_running[NR_CPUS];
 	task_t *migration_thread;
 	list_t migration_queue;
-	int nr_sched_short;
+	unsigned long nr_sched_short, nr_sched_short_overdue; //#BENITZIK
 } ____cacheline_aligned;
 
 static struct runqueue runqueues[NR_CPUS] __cacheline_aligned;
@@ -781,14 +781,26 @@ void scheduler_tick(int user_tick, int system)
 		set_tsk_need_resched(p);
 		p->prio = effective_prio(p);
 		p->first_time_slice = 0;
-		p->time_slice = TASK_TIMESLICE(p);
 
-		if (!TASK_INTERACTIVE(p) || EXPIRED_STARVING(rq)) {
-			if (!rq->expired_timestamp)
-				rq->expired_timestamp = jiffies;
-			enqueue_task(p, rq->expired);
-		} else
-			enqueue_task(p, rq->active);
+		//#BENITZIK - changing until "out" label.
+		if (p->policy != SCHED_SHORT)		
+			p->time_slice = TASK_TIMESLICE(p);
+		else {
+			// TODO: Consider how to refresh p's timeslice for future runs.
+		}
+
+		if (p->policy != SCHED_SHORT) {
+			if ((!TASK_INTERACTIVE(p) || EXPIRED_STARVING(rq))) {
+				if (!rq->expired_timestamp)
+					rq->expired_timestamp = jiffies;
+				enqueue_task(p, rq->expired);
+			} else
+				enqueue_task(p, rq->active);
+		}
+		else {
+			// TODO: Consider how to insert SHORT processes into their arrays
+		}
+
 	}
 out:
 #if CONFIG_SMP
@@ -1189,8 +1201,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	else {
 		retval = -EINVAL;
 		if (policy != SCHED_FIFO && policy != SCHED_RR &&
-				policy != SCHED_OTHER && policy != SCHED_SHORT &&	//#BENITZIK
-				policy != SCHED_OVERDUE_SHORT)
+				policy != SCHED_OTHER && policy != SCHED_SHORT)		//#BENITZIK
 			goto out_unlock;
 	}
 
@@ -1654,10 +1665,15 @@ void __init sched_init(void)
 		rq = cpu_rq(i);
 		rq->active = rq->arrays;
 		rq->expired = rq->arrays + 1;
+
+		//#BENITZIK: init for adding arrays like "active"(short_array,overdue_array)
+		rq->short_array = rq->arrays + 2;
+		rq->overdue_array = rq->arrays + 3;
+
 		spin_lock_init(&rq->lock);
 		INIT_LIST_HEAD(&rq->migration_queue);
 
-		//#BENITZIK: init for adding arrays like "active"(short_array,overdue_array)
+		//#BENITZIK - now init the new arrays for SHORT as well.
 		for (j = 0; j < 4; j++) {	
 			array = rq->arrays + j;
 			for (k = 0; k < MAX_PRIO; k++) {
@@ -1668,6 +1684,7 @@ void __init sched_init(void)
 			__set_bit(MAX_PRIO, array->bitmap);
 		}
 		nr_sched_short = 0;//#BENITZIK: init number of short threads
+		nr_sched_short_overdue = 0;//#BENITZIK: init number of short-overdue threads
 	}
 	/*
 	 * We have to do a little magic to get the first

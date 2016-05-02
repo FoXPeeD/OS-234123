@@ -122,7 +122,9 @@ extern unsigned long nr_uninterruptible(void);
 #define SCHED_SHORT		5	//#BENITZIK
 //#define SCHED_OVERDUE_SHORT 	6
 
-struct sched_param {//#BENITZIK
+//#BENITZIK
+// We use this when requesting to change process from OTHER to SHORT
+struct sched_param {
 	int sched_priority;
 	int requested_time;
 	int numer_of_cooloffs;
@@ -458,9 +460,9 @@ struct task_struct {
 	
 	//#BENITZIK
 	int is_overdue;
-	int cooloffs_start;
+	int initial_cooloffs;
 	int cooloffs_left;
-	int req_time;
+	int requested_time;
 	int time_left;
 	
 };

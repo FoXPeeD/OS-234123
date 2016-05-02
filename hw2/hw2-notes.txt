@@ -1,0 +1,26 @@
+Just some notes:
+
+SHORT life-cycle (Changed from OTHER to SHORT (setscheduler) or created by father via fork() (fork)):
+
+- Change relevant task_struct values.
+- Insert into the SHORT array.
+- If priority changes, move it in the runqueue. (Don't forget to check if it can be run immediately)
+
+
+- Run, once there are no RT processes that need to run and has the best priority among other SHORTs
+- If nice() call lowers its priority change its place in the array. (Don't forget to check if it's now below someone else)
+- If someone more imporant comes along:
+	- Interrupt!
+	- Put back into SHORT array [without changing its current timeslice].
+
+
+- If timeslice is used up:
+	- Move into SHORT_OVERDUE (with priority of 0).
+	- If still has cooldown_cycles left, set alarm (How, exactly??) to go off after the cooldown period, which will revive it back into the SHORT array.
+
+- If finished running on its own, remove from array and call destructors.
+- If yields or is waiting for a resource, reinsert into SHORT array with same, partial timeslice.
+
+- Run, once there are no RT, SHORT or OTHER processes that need to run, and it is the most recent.
+
+
