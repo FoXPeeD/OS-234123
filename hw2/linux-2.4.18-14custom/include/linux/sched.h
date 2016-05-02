@@ -459,12 +459,10 @@ struct task_struct {
 	void *journal_info;
 	
 	//#BENITZIK
-	int is_overdue;
-	int initial_cooloffs;
+	//int is_overdue;
+	//int initial_cooloffs;
 	int cooloffs_left;
 	int requested_time;
-	int time_left;
-	
 };
 
 /*

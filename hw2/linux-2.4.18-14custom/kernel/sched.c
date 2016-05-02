@@ -812,11 +812,11 @@ out:
 
 void scheduling_functions_start_here(void) { }
 
-/*
+/* 
  * 'schedule()' is the main scheduler function.
  *
- *
- *we should do:
+ * //#BENITZIK
+ * We should do:
  *
  *
  *

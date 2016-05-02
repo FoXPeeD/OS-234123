@@ -1,6 +1,6 @@
 Just some notes:
 
-SHORT life-cycle (Changed from OTHER to SHORT (setscheduler) or created by father via fork() (fork)):
+SHORT life-cycle (#I# Changed from OTHER to SHORT (setscheduler) or #B# created by father via fork() (fork)):
 
 - Change relevant task_struct values.
 - Insert into the SHORT array.
@@ -22,5 +22,14 @@ SHORT life-cycle (Changed from OTHER to SHORT (setscheduler) or created by fathe
 - If yields or is waiting for a resource, reinsert into SHORT array with same, partial timeslice.
 
 - Run, once there are no RT, SHORT or OTHER processes that need to run, and it is the most recent.
+
+
+
+Edge case:
+- What if someone tries to change SHORT to SHORT? 
+- What if only 1 OVERDUE - does it get run anyways? does that cost it run a cooldown cycle? does the cooldown still tick? 
+	@@ Yes, it runs anyways. No, it runs for free. Yes, it will interrupt ITSELF when the cooldown period is over to run as a SHORT.
+- What if non-root tries to change OTHER to SHORT?
+- What does "The parent gives up the CPU and the next task to run is the child process." mean?
 
 

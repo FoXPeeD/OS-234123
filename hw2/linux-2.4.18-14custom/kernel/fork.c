@@ -591,6 +591,7 @@ static inline void copy_flags(unsigned long clone_flags, struct task_struct *p)
  *
  *
  */
+		//#BENITZIK
 int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	    struct pt_regs *regs, unsigned long stack_size)
 {
@@ -732,7 +733,13 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	__cli();
 	if (!current->time_slice)
 		BUG();
-	p->time_slice = (current->time_slice + 1) >> 1;
+	
+	//#BENITZIK	- TODO: Make sure child gets scheduled now, and parent gets reschedule.
+	p->cooloffs_left = (current->cooloffs_left + 1) >> 1;
+	current->cooloffs_left >>= 1;
+
+
+	p->time_slice = (current->time_slice + 1) >> 1;	
 	p->first_time_slice = 1;
 	current->time_slice >>= 1;
 	p->sleep_timestamp = jiffies;
@@ -791,6 +798,8 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		 * COW overhead when the child exec()s afterwards.
 		 */
 		current->need_resched = 1;
+
+	p->
 
 fork_out:
 	return retval;
