@@ -591,7 +591,6 @@ static inline void copy_flags(unsigned long clone_flags, struct task_struct *p)
  *
  *
  */
-		//#BENITZIK
 int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	    struct pt_regs *regs, unsigned long stack_size)
 {
@@ -735,13 +734,22 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		BUG();
 	
 	//#BENITZIK	- TODO: Make sure child gets scheduled now, and parent gets reschedule.
-	p->cooloffs_left = (current->cooloffs_left + 1) >> 1;
-	current->cooloffs_left >>= 1;
+	if (current->policy == SHORT) {
+		p->cooloffs_left = (current->cooloffs_left + 1) >> 1;
+		current->cooloffs_left >>= 1;
+		p->is_overdue = current->is_overdue;
+	}
 
+	//#BENITZIK If its an overdue short, each process should have the same, full cooloff [stored in "time_slice"].
+	if (current->policy == SHORT && !current->is_overdue) {
+		p->time_slice = current->time_slice;
+	}
+	else {
+		p->time_slice = (current->time_slice + 1) >> 1;	
+		current->time_slice >>= 1;
+	}
 
-	p->time_slice = (current->time_slice + 1) >> 1;	
 	p->first_time_slice = 1;
-	current->time_slice >>= 1;
 	p->sleep_timestamp = jiffies;
 	if (!current->time_slice) {
 		/*
@@ -790,6 +798,13 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		send_sig(SIGSTOP, p, 1);
 	wake_up_forked_process(p);	/* do this last */
 	++total_forks;
+	
+	//#BENITZIK - If short, reschedule parent no matter what 
+	if (current->policy == SCHED_SHORT) {
+		current->need_resched = 1;
+		goto fork_out;
+	}
+	
 	if (clone_flags & CLONE_VFORK)
 		wait_for_completion(&vfork);
 	else
@@ -799,7 +814,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		 */
 		current->need_resched = 1;
 
-	p->
+	
 
 fork_out:
 	return retval;

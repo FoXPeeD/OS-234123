@@ -120,7 +120,6 @@ extern unsigned long nr_uninterruptible(void);
 #define SCHED_FIFO		1
 #define SCHED_RR		2
 #define SCHED_SHORT		5	//#BENITZIK
-//#define SCHED_OVERDUE_SHORT 	6
 
 //#BENITZIK
 // We use this when requesting to change process from OTHER to SHORT
@@ -460,10 +459,9 @@ struct task_struct {
 	
 	//#BENITZIK: TODO:initialize
 	int is_overdue;
-	//int initial_cooloffs;
 	int cooloffs_left;
 	int requested_time;
-	int next_requested_time;
+	int next_requested_time;	// used when changing requested_time mid-epoch
 	int requested_time_ms;
 };
 

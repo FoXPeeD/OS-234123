@@ -24,12 +24,19 @@ SHORT life-cycle (#I# Changed from OTHER to SHORT (setscheduler) or #B# created 
 - Run, once there are no RT, SHORT or OTHER processes that need to run, and it is the most recent.
 
 
+Other Stuff to Remember to Do:
+- If non-root/kernel tries to change OTHER to SHORT, fail it.
+
 
 Edge case:
-- What if someone tries to change SHORT to SHORT? 
+- What if someone tries to change SHORT to SHORT?
+	@@ Fail it.
 - What if only 1 OVERDUE - does it get run anyways? does that cost it run a cooldown cycle? does the cooldown still tick? 
 	@@ Yes, it runs anyways. No, it runs for free. Yes, it will interrupt ITSELF when the cooldown period is over to run as a SHORT.
-- What if non-root tries to change OTHER to SHORT?
-- What does "The parent gives up the CPU and the next task to run is the child process." mean?
+- If parent is non-SHORT, but son is SHORT, do we still give him the son's remaining timeslice? (Asked on pizza)
+
+
+prio for overdue: how do we force all the overdues into the same list? we can either:
+	@@ lie about prio before push: all we have to do is use change the prio before pushing into OVERDUE, and recover from static_prio before pushing into SHORT.
 
 

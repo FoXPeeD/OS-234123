@@ -785,30 +785,51 @@ void scheduler_tick(int user_tick, int system)
 	 */
 	if (p->sleep_avg)
 		p->sleep_avg--;
+
+
+	//#BENITZIK - If overdue and time_slice is done: if it has cooloff cycles remaining, revive it. Otherwise, keep running.
+	if (p->policy == SCHED_SHORT && p->time_slice <= 1) {
+		if (!p->is_overdue) {
+			// SHORT's timeslice is up, downgrade to SHORT_OVERDUE.
+			dequeue_task(p, rq->short_array);
+			p->is_overdue = 1;
+			p->time_slice = requested_time;		// (Cooldown)
+			p->requested_time = p->next_requested_time;
+			p->first_time_slice = 0;
+			p->prio = 0;
+			set_tsk_need_resched(p);
+			enqueue_task(p, rq->overdue_array);
+		}
+		else if (p->is_overdue && p->cooloffs_left) {
+			// Cooloff period is over, so revive as SHORT process.
+			dequeue_task(p, rq->overdue_array);
+			p->is_overdue = 0;
+			p->cooloffs_left--;
+			p->time_slice = next_requested_time;
+			p->requested_time = p->next_requested_time;
+			p->first_time_slice = 0;
+			p->prio = p->static_prio;
+			set_tsk_need_resched(p);
+			enqueue_task(p, rq->short_array);
+		}
+		// It is overdue, so continue until exit or replaced by another process.
+		goto out;
+	}
+
 	if (!--p->time_slice) {
 		dequeue_task(p, rq->active);
 		set_tsk_need_resched(p);
 		p->prio = effective_prio(p);
 		p->first_time_slice = 0;
+		p->time_slice = TASK_TIMESLICE(p);
 
-		//#BENITZIK - changing until "out" label.
-		if (p->policy != SCHED_SHORT)		
-			p->time_slice = TASK_TIMESLICE(p);
-		else {
-			// TODO: Consider how to refresh p's timeslice for future runs.
-		}
+		if ((!TASK_INTERACTIVE(p) || EXPIRED_STARVING(rq))) {
+			if (!rq->expired_timestamp)
+				rq->expired_timestamp = jiffies;
+			enqueue_task(p, rq->expired);
+		} else
+			enqueue_task(p, rq->active);
 
-		if (p->policy != SCHED_SHORT) {
-			if ((!TASK_INTERACTIVE(p) || EXPIRED_STARVING(rq))) {
-				if (!rq->expired_timestamp)
-					rq->expired_timestamp = jiffies;
-				enqueue_task(p, rq->expired);
-			} else
-				enqueue_task(p, rq->active);
-		}
-		else {
-			// TODO: Consider how to insert SHORT processes into their arrays
-		}
 
 	}
 out:
@@ -1481,6 +1502,13 @@ asmlinkage long sys_sched_yield(void)
 	int i;
 
 	if (unlikely(rt_task(current))) {
+		list_del(&current->run_list);
+		list_add_tail(&current->run_list, array->queue + current->prio);
+		goto out_unlock;
+	}
+	
+	//#BENITZIK
+	if (current->policy == SCHED_SHORT) {
 		list_del(&current->run_list);
 		list_add_tail(&current->run_list, array->queue + current->prio);
 		goto out_unlock;
