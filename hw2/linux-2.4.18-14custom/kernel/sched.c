@@ -230,6 +230,10 @@ static inline void enqueue_task(struct task_struct *p, prio_array_t *array)
 static inline int effective_prio(task_t *p)
 {
 	int bonus, prio;
+	if (p->policy == SCHED_SHORT)
+	{
+		return p->static_prio;
+	}
 
 	/*
 	 * Here we scale the actual sleep average [0 .... MAX_SLEEP_AVG]
@@ -424,6 +428,11 @@ void wake_up_forked_process(task_t * p)
  */
 void sched_exit(task_t * p)
 {
+	//#BENITZIK: TODO: check what to do if the son (p) is SHORT
+	if (current->policy == SCHED_SHORT)
+	{
+		return;
+	}
 	__cli();
 	if (p->first_time_slice) {
 		current->time_slice += p->time_slice;
@@ -1161,7 +1170,7 @@ static inline task_t *find_process_by_pid(pid_t pid)
 *	check params(requested_time,numer_of_cooloffs) and init fields in task_t
 *SHORT w/ policy==-1 may be regerded as set_param
 *SHORT w/ policy!=-1 should return error
-*
+*check permision (su)
 */
 static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 {
@@ -1171,6 +1180,9 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	unsigned long flags;
 	runqueue_t *rq;
 	task_t *p;
+
+	int was_policy_negative = (policy < 0) ? 1 : 0;
+
 
 	if (!param || pid < 0)
 		goto out_nounlock;
@@ -1196,6 +1208,12 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	 */
 	rq = task_rq_lock(p, &flags);
 
+	//#BENITZIK: if task is already SHORT.
+	if (p->policy == SCHED_SHORT && policy >= 0) 
+	{
+		retval = -EPERM;
+		goto out_unlock;
+	}
 	if (policy < 0)
 		policy = p->policy;
 	else {
@@ -1214,14 +1232,60 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		goto out_unlock;
 	if ((policy == SCHED_OTHER) != (lp.sched_priority == 0))
 		goto out_unlock;
+	if (policy==SCHED_SHORT && p->policy != SCHED_SHORT)//#BENITZIK: validate parameters
+	{
+		if(lp.requested_time <= 0 || lp.requested_time > 3000)
+		{
+			goto out_unlock;
+		}
+		if(lp.numer_of_cooloffs <= 0 || lp.numer_of_cooloffs > 5)
+		{
+			goto out_unlock;
+		}
+		if (policy==SCHED_SHORT && p->policy != SCHED_OTHER)
+		{
+			retval = -EPERM;
+			goto out_unlock;
+		}
+	} else if (policy==SCHED_SHORT){//if arrived from set_param ignore numer_of_cooloffs
+		if(lp.requested_time <= 0 || lp.requested_time > 3000)
+		{
+			goto out_unlock;
+		}
+	}
 
 	retval = -EPERM;
+	//#BENITZIK: TODO:handle permissions
 	if ((policy == SCHED_FIFO || policy == SCHED_RR) &&
 	    !capable(CAP_SYS_NICE))
 		goto out_unlock;
 	if ((current->euid != p->euid) && (current->euid != p->uid) &&
 	    !capable(CAP_SYS_NICE))
 		goto out_unlock;
+
+
+	//#BENITZIK
+	p->requested_time_ms = lp.requested_time;
+	p->next_requested_time = lp.requested_time*HZ/1000;
+	if (was_policy_negative)
+	{
+		goto out_unlock;
+	} else if (policy == SCHED_SHORT){
+		is_overdue = 0;
+		p->cooloffs_left = lp.numer_of_cooloffs;
+		p->timeslice = lp.requested_time*HZ/1000;
+		p->requested_time = lp.requested_time*HZ/1000;
+		p->static_prio = effective_prio(p);
+		p->prio = effective_prio(p);
+		dequeue_task(p, p->array);
+		enqueue_task(p, rq->short_array);
+		p->array = short_array;
+		set_need_resched();
+		// rq->nr_running++;
+		goto out_unlock;
+	}
+
+
 
 	array = p->array;
 	if (array)
@@ -1281,7 +1345,7 @@ out_nounlock:
 	return retval;
 }
 
-
+//#BENITZIK: TODO:return all sched_param parameters 
 asmlinkage long sys_sched_getparam(pid_t pid, struct sched_param *param)
 {
 	struct sched_param lp;

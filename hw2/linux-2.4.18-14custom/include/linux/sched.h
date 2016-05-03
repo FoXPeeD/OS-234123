@@ -458,11 +458,13 @@ struct task_struct {
 /* journalling filesystem info */
 	void *journal_info;
 	
-	//#BENITZIK
-	//int is_overdue;
+	//#BENITZIK: TODO:initialize
+	int is_overdue;
 	//int initial_cooloffs;
 	int cooloffs_left;
 	int requested_time;
+	int next_requested_time;
+	int requested_time_ms;
 };
 
 /*
