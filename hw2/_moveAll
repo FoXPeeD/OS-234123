@@ -1,18 +1,14 @@
 #!/bin/bash
 
-cp -u runTest						/root/
-cp -u blocker.h						/root/hw1/
-cp -a -u tests/.					/root/hw1/
+#cp -u runTest						/root/
+#cp -u blocker.h						/root/hw1/
+#cp -a -u tests/.					/root/hw1/
 cp -u arch/i386/kernel/entry.S		/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
-cp -u arch/i386/kernel/process.c	/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
 cp -u include/asm-i386/unistd.h		/usr/src/linux-2.4.18-14custom/include/asm-i386/
-cp -u include/asm-i386/errno.h		/usr/src/linux-2.4.18-14custom/include/asm-i386/
 cp -u include/linux/sched.h			/usr/src/linux-2.4.18-14custom/include/linux/
-cp -u kernel/Makefile				/usr/src/linux-2.4.18-14custom/kernel/
-cp -u kernel/blocker.c				/usr/src/linux-2.4.18-14custom/kernel/
 cp -u kernel/fork.c					/usr/src/linux-2.4.18-14custom/kernel/
-cp -u kernel/exit.c					/usr/src/linux-2.4.18-14custom/kernel/
 cp -u kernel/sched.c				/usr/src/linux-2.4.18-14custom/kernel/
+cp -u hw2_syscalls.h				/usr/src/linux-2.4.18-14custom/
 cp -u ../compileKernel				/root/
 
 
