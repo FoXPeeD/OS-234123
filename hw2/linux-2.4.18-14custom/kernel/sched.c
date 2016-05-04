@@ -776,7 +776,9 @@ void scheduler_tick(int user_tick, int system)
 	kstat.per_cpu_system[cpu] += system;
 
 	/* Task might have expired already, but not scheduled off yet */
-	if (p->array != rq->active) {
+	if (p->array != rq->active 
+		&& p->array != rq->short_array 
+		&& p->array != rq->overdue_array) {		//#BENITZIK
 		set_tsk_need_resched(p);
 		return;
 	}
