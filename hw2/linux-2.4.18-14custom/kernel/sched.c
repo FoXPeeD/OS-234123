@@ -2088,6 +2088,71 @@ int ll_copy_from_user(void *to, const void *from_user, unsigned long len)
 	return 0;
 }
 
+
+int sys_is_SHORT(int pid){//syscall #243
+
+	//check pid
+	if (pid < 0){
+		return -EINVAL
+	}
+	p = find_process_by_pid(pid);
+	if (!p){
+		return -ESRCH;
+	}
+
+	if (p->policy != SCHED_SHORT)
+	{
+		return -EINVAL;
+	}
+
+	return !p->is_overdue;
+}
+
+int sys_remaining_time(int pid){//syscall #244
+
+	//check pid
+	if (pid < 0){
+		return -EINVAL
+	}
+	p = find_process_by_pid(pid);
+	if (!p){
+		return -ESRCH;
+	}
+
+	if (p->policy != SCHED_SHORT)
+	{
+		return -EINVAL;
+	}
+	if((p->timeslice*1000)/HZ > 3000){
+		return 3000;
+	}
+	return (p->timeslice*1000)/HZ;
+}
+
+int sys_remaining_cooloffs(int pid){//syscall #245
+
+	//check pid
+	if (pid < 0){
+		return -EINVAL
+	}
+	p = find_process_by_pid(pid);
+	if (!p){
+		return -ESRCH;
+	}
+
+	if (p->policy != SCHED_SHORT)
+	{
+		return -EINVAL;
+	}
+	if (p->cooloffs_left < 0)
+	{
+		return 0;
+	}
+	return p->cooloffs_left;
+}
+
+
+
 #ifdef CONFIG_LOLAT_SYSCTL
 struct low_latency_enable_struct __enable_lowlatency = { 0, };
 #endif

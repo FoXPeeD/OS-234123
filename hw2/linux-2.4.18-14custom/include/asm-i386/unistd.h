@@ -247,6 +247,9 @@
 #define __NR_futex		240
 #define __NR_sched_setaffinity	241
 #define __NR_sched_getaffinity	242
+#define __NR_is_SHORT	243		/* #BENITZIK */
+#define __NR_remaining_time	244
+#define __NR_remaining_cooloffs	245
 
 /* user-visible error numbers are in the range -1 - -124: see <asm-i386/errno.h> */
 

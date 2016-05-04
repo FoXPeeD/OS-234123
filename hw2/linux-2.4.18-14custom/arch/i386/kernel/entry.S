@@ -650,6 +650,10 @@ ENTRY(sys_call_table)
 	.long SYMBOL_NAME(sys_sched_setaffinity)
 	.long SYMBOL_NAME(sys_sched_getaffinity)
 
+	.long SYMBOL_NAME(sys_is_SHORT)		/* BENITZIK 243 */	
+	.long SYMBOL_NAME(sys_remaining_time)	/* 244 */
+	.long SYMBOL_NAME(sys_remaining_cooloffs)	/* 245 */
+
 	.rept NR_syscalls-(.-sys_call_table)/4
 		.long SYMBOL_NAME(sys_ni_syscall)
 	.endr
