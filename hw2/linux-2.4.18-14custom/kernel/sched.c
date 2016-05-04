@@ -1322,15 +1322,15 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 
 	//#BENITZIK
 	p->requested_time_ms = lp.requested_time;
-	p->next_requested_time = lp.requested_time*HZ/1000;
+	p->next_requested_time = (lp.requested_time*HZ)/1000;
 	if (was_policy_negative)
 	{
 		goto out_unlock;
 	} else if (policy == SCHED_SHORT){
 		is_overdue = 0;
 		p->cooloffs_left = lp.number_of_cooloffs;
-		p->timeslice = lp.requested_time*HZ/1000;
-		p->requested_time = lp.requested_time*HZ/1000;
+		p->timeslice = (lp.requested_time*HZ)/1000;
+		p->requested_time = (lp.requested_time*HZ)/1000;
 		p->static_prio = effective_prio(p);
 		p->prio = effective_prio(p);
 		p->requested_cooloffs = lp.number_of_cooloffs;
