@@ -1229,7 +1229,7 @@ static inline task_t *find_process_by_pid(pid_t pid)
 /*#BENITZIK	
 *we should change here:
 *allow SCHED_OTHER to be changed to SHORT
-*	check params(requested_time,numer_of_cooloffs) and init fields in task_t
+*	check params(requested_time,number_of_cooloffs) and init fields in task_t
 *SHORT w/ policy==-1 may be regerded as set_param
 *SHORT w/ policy!=-1 should return error
 *check permision (su)
@@ -1294,26 +1294,20 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		goto out_unlock;
 	if ((policy == SCHED_OTHER) != (lp.sched_priority == 0))
 		goto out_unlock;
-	if (policy==SCHED_SHORT && p->policy != SCHED_SHORT)//#BENITZIK: validate parameters
+	if (policy == SCHED_SHORT && p->policy != SCHED_SHORT)//#BENITZIK: validate parameters
 	{
 		if(lp.requested_time <= 0 || lp.requested_time > 3000)
-		{
 			goto out_unlock;
-		}
-		if(lp.numer_of_cooloffs < 0 || lp.numer_of_cooloffs > 5)
-		{
+		if(lp.number_of_cooloffs < 0 || lp.number_of_cooloffs > 5)
 			goto out_unlock;
-		}
 		if (policy==SCHED_SHORT && p->policy != SCHED_OTHER)
 		{
 			retval = -EPERM;
 			goto out_unlock;
 		}
-	} else if (policy==SCHED_SHORT){//if arrived from set_param ignore numer_of_cooloffs
+	} else if (policy == SCHED_SHORT) {		//if arrived from set_param ignore number_of_cooloffs
 		if(lp.requested_time <= 0 || lp.requested_time > 3000)
-		{
 			goto out_unlock;
-		}
 	}
 
 	retval = -EPERM;
@@ -1334,11 +1328,12 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		goto out_unlock;
 	} else if (policy == SCHED_SHORT){
 		is_overdue = 0;
-		p->cooloffs_left = lp.numer_of_cooloffs;
+		p->cooloffs_left = lp.number_of_cooloffs;
 		p->timeslice = lp.requested_time*HZ/1000;
 		p->requested_time = lp.requested_time*HZ/1000;
 		p->static_prio = effective_prio(p);
 		p->prio = effective_prio(p);
+		p->requested_cooloffs = lp.number_of_cooloffs;
 		dequeue_task(p, p->array);
 		enqueue_task(p, rq->short_array);
 		p->array = short_array;
@@ -1382,7 +1377,7 @@ asmlinkage long sys_sched_setparam(pid_t pid, struct sched_param *param)
 }
 
 /*
- *we need to return requested_time and numer_of_cooloffs
+ *we need to return requested_time and number_of_cooloffs
  *
  *
  *
@@ -1406,7 +1401,7 @@ out_nounlock:
 	return retval;
 }
 
-//#BENITZIK: TODO:return all sched_param parameters 
+//#BENITZIK
 asmlinkage long sys_sched_getparam(pid_t pid, struct sched_param *param)
 {
 	struct sched_param lp;
@@ -1421,7 +1416,12 @@ asmlinkage long sys_sched_getparam(pid_t pid, struct sched_param *param)
 	retval = -ESRCH;
 	if (!p)
 		goto out_unlock;
+
+	//#BENITZIK
 	lp.sched_priority = p->rt_priority;
+	lp.number_of_cooloffs = requested_cooloffs;
+	lp.requested_time = requested_time_ms;
+	
 	read_unlock(&tasklist_lock);
 
 	/*

@@ -805,8 +805,12 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	wake_up_forked_process(p);	/* do this last */
 	++total_forks;
 	
+	prio_array_t *array;
 	//#BENITZIK - If short, reschedule parent no matter what 
 	if (current->policy == SCHED_SHORT) {
+		array = current->array;
+		dequeue_task(current, array);
+		enqueue_task(current, array);
 		current->need_resched = 1;
 		goto fork_out;
 	}

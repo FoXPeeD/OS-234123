@@ -126,7 +126,7 @@ extern unsigned long nr_uninterruptible(void);
 struct sched_param {
 	int sched_priority;
 	int requested_time;
-	int numer_of_cooloffs;
+	int number_of_cooloffs;
 };
 
 struct completion;
@@ -463,6 +463,7 @@ struct task_struct {
 	int requested_time;
 	int next_requested_time;	// used when changing requested_time mid-epoch
 	int requested_time_ms;
+	int requested_cooloffs;
 	int insert_at_front;
 };
 
