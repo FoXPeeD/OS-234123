@@ -910,6 +910,35 @@ pick_next_task:
 		goto switch_tasks;
 	}
 
+	// Find and run a realtime, if exists.
+	array = rq->active;
+	if (array->nr_active) {
+		idx = sched_find_first_bit(array->bitmap);
+		queue = array->queue + idx;
+		next = list_entry(queue->next, task_t, run_list);
+		if (next->policy != SCHED_OTHER)	// == REALTIME
+			goto switch_tasks;
+	}
+
+	// Find and run a short, if exists.
+	array = rq->short_array;
+	if (array->nr_active) {
+		idx = sched_find_first_bit(array->bitmap);
+		queue = array->queue + idx;
+		next = list_entry(queue->next, task_t, run_list);
+		goto switch_tasks;
+	}
+
+	// If no OTHER tasks exist, run OVERDUE-SHORT
+	if (!rq->active->nr_active && !rq->expired->nr_active) {
+		array = rq->overdue_array;
+		idx = sched_find_first_bit(array->bitmap);
+		queue = array->queue + idx;
+		next = list_entry(queue->next, task_t, run_list);
+		goto switch_tasks;
+	}
+
+	// Otherwise (only OTHER processes exist),  
 	array = rq->active;
 	if (unlikely(!array->nr_active)) {
 		/*
