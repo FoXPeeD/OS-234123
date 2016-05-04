@@ -221,7 +221,14 @@ static inline void dequeue_task(struct task_struct *p, prio_array_t *array)
 
 static inline void enqueue_task(struct task_struct *p, prio_array_t *array)
 {
-	list_add_tail(&p->run_list, array->queue + p->prio);
+	//#BENITZIK
+	if (p->insert_at_front) {
+		list_add(&p->run_list, array->queue + p->prio);
+		p->insert_at_front = 0;
+	}
+	else
+		list_add_tail(&p->run_list, array->queue + p->prio);
+
 	__set_bit(p->prio, array->bitmap);
 	array->nr_active++;
 	p->array = array;
@@ -230,6 +237,7 @@ static inline void enqueue_task(struct task_struct *p, prio_array_t *array)
 static inline int effective_prio(task_t *p)
 {
 	int bonus, prio;
+	//#BENITZIK
 	if (p->policy == SCHED_SHORT)
 	{
 		return p->static_prio;
@@ -260,7 +268,13 @@ static inline int effective_prio(task_t *p)
 static inline void activate_task(task_t *p, runqueue_t *rq)
 {
 	unsigned long sleep_time = jiffies - p->sleep_timestamp;
-	prio_array_t *array = rq->active;
+	prio_array_t *array;
+
+	//#BENITZIK
+	if (p->policy == SCHED_SHORT)
+		array = rq->short_array;
+	else
+		array = rq->active;
 
 	if (!rt_task(p) && sleep_time) {
 		/*
@@ -797,14 +811,14 @@ void scheduler_tick(int user_tick, int system)
 			p->requested_time = p->next_requested_time;
 			p->first_time_slice = 0;
 			p->prio = 0;
+			p->cooloffs_left--;
 			set_tsk_need_resched(p);
 			enqueue_task(p, rq->overdue_array);
 		}
-		else if (p->is_overdue && p->cooloffs_left) {
+		else if (p->is_overdue && p->cooloffs_left >= 0) {
 			// Cooloff period is over, so revive as SHORT process.
 			dequeue_task(p, rq->overdue_array);
 			p->is_overdue = 0;
-			p->cooloffs_left--;
 			p->time_slice = next_requested_time;
 			p->requested_time = p->next_requested_time;
 			p->first_time_slice = 0;
@@ -829,8 +843,6 @@ void scheduler_tick(int user_tick, int system)
 			enqueue_task(p, rq->expired);
 		} else
 			enqueue_task(p, rq->active);
-
-
 	}
 out:
 #if CONFIG_SMP
@@ -1202,7 +1214,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	runqueue_t *rq;
 	task_t *p;
 
-	int was_policy_negative = (policy < 0) ? 1 : 0;
+	int was_policy_negative = (policy < 0);
 
 
 	if (!param || pid < 0)

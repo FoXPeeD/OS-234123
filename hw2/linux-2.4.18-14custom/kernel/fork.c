@@ -733,7 +733,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	if (!current->time_slice)
 		BUG();
 	
-	//#BENITZIK	- TODO: Make sure child gets scheduled now, and parent gets reschedule.
+	//#BENITZIK
 	if (current->policy == SHORT) {
 		p->cooloffs_left = (current->cooloffs_left + 1) >> 1;
 		current->cooloffs_left >>= 1;
@@ -796,6 +796,12 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 	if (p->ptrace & PT_PTRACED)
 		send_sig(SIGSTOP, p, 1);
+	
+
+	//#BENITZIK
+	if (p->policy == SCHED_SHORT)
+		p->insert_at_front = 1;
+
 	wake_up_forked_process(p);	/* do this last */
 	++total_forks;
 	
