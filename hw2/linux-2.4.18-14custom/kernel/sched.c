@@ -1259,7 +1259,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		{
 			goto out_unlock;
 		}
-		if(lp.numer_of_cooloffs <= 0 || lp.numer_of_cooloffs > 5)
+		if(lp.numer_of_cooloffs < 0 || lp.numer_of_cooloffs > 5)
 		{
 			goto out_unlock;
 		}
@@ -1302,7 +1302,6 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		enqueue_task(p, rq->short_array);
 		p->array = short_array;
 		set_need_resched();
-		// rq->nr_running++;
 		goto out_unlock;
 	}
 
@@ -1547,6 +1546,7 @@ asmlinkage long sys_sched_get_priority_max(int policy)
 	switch (policy) {
 	case SCHED_FIFO:
 	case SCHED_RR:
+	// case SCHED_SHORT:	//#BENITZIK: TODO: lift comment before submission
 		ret = MAX_USER_RT_PRIO-1;
 		break;
 	case SCHED_OTHER:
@@ -1567,6 +1567,7 @@ asmlinkage long sys_sched_get_priority_min(int policy)
 		ret = 1;
 		break;
 	case SCHED_OTHER:
+	// case SCHED_SHORT:	//#BENITZIK: TODO: lift comment before submission
 		ret = 0;
 	}
 	return ret;

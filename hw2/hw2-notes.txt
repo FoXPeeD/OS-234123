@@ -34,7 +34,7 @@ Edge case:
 - What if only 1 OVERDUE - does it get run anyways? does that cost it run a cooldown cycle? does the cooldown still tick? 
 	@@ Yes, it runs anyways. No, it runs for free. Yes, it will interrupt ITSELF when the cooldown period is over to run as a SHORT.
 - If parent is non-SHORT, but son is SHORT, do we still give him the son's remaining timeslice? (Asked on pizza)
-
+-make sure te son is running right after fork.
 
 prio for overdue: how do we force all the overdues into the same list? we can either:
 	@@ lie about prio before push: all we have to do is use change the prio before pushing into OVERDUE, and recover from static_prio before pushing into SHORT.
