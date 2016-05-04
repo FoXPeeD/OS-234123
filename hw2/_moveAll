@@ -8,8 +8,9 @@ cp -u include/asm-i386/unistd.h		/usr/src/linux-2.4.18-14custom/include/asm-i386
 cp -u include/linux/sched.h			/usr/src/linux-2.4.18-14custom/include/linux/
 cp -u kernel/fork.c					/usr/src/linux-2.4.18-14custom/kernel/
 cp -u kernel/sched.c				/usr/src/linux-2.4.18-14custom/kernel/
-cp -u hw2_syscalls.h				/usr/src/linux-2.4.18-14custom/
-cp -u ../compileKernel				/root/
+cp -u ../hw2_syscalls.h				/usr/src/linux-2.4.18-14custom/
+cp -u ../main.c						/root/
+cp -u ../../compileKernel			/root/
 
 
 echo Done copying!

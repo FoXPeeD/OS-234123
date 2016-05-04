@@ -734,14 +734,14 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		BUG();
 	
 	//#BENITZIK
-	if (current->policy == SHORT) {
+	if (current->policy == SCHED_SHORT) {
 		p->cooloffs_left = (current->cooloffs_left + 1) >> 1;
 		current->cooloffs_left >>= 1;
 		p->is_overdue = current->is_overdue;
 	}
 
 	//#BENITZIK If its an overdue short, each process should have the same, full cooloff [stored in "time_slice"].
-	if (current->policy == SHORT && !current->is_overdue) {
+	if (current->policy == SCHED_SHORT && !current->is_overdue) {
 		p->time_slice = current->time_slice;
 	}
 	else {
@@ -809,8 +809,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	//#BENITZIK - If short, reschedule parent no matter what 
 	if (current->policy == SCHED_SHORT) {
 		array = current->array;
-		dequeue_task(current, array);
-		enqueue_task(current, array);
+		push_to_back(current, array);
 		current->need_resched = 1;
 		goto fork_out;
 	}

@@ -142,7 +142,7 @@ struct runqueue {
 	int prev_nr_running[NR_CPUS];
 	task_t *migration_thread;
 	list_t migration_queue;
-	unsigned long nr_sched_short, nr_sched_short_overdue; //#BENITZIK
+	// unsigned long nr_sched_short, nr_sched_short_overdue; //#BENITZIK
 } ____cacheline_aligned;
 
 static struct runqueue runqueues[NR_CPUS] __cacheline_aligned;
@@ -207,6 +207,7 @@ static inline void rq_unlock(runqueue_t *rq)
 	spin_unlock(&rq->lock);
 	local_irq_enable();
 }
+
 
 /*
  * Adding/removing a task to/from a priority array:
@@ -408,6 +409,13 @@ repeat_lock_task:
 int wake_up_process(task_t * p)
 {
 	return try_to_wake_up(p, 0);
+}
+
+void push_to_back(struct task_struct *p, prio_array_t *array) {
+	runqueue_t *rq = this_rq_lock();
+	dequeue_task(p, array);
+	enqueue_task(p, array);
+	rq_unlock(rq);
 }
 
 void wake_up_forked_process(task_t * p)
@@ -807,7 +815,7 @@ void scheduler_tick(int user_tick, int system)
 			// SHORT's timeslice is up, downgrade to SHORT_OVERDUE.
 			dequeue_task(p, rq->short_array);
 			p->is_overdue = 1;
-			p->time_slice = requested_time;		// (Cooldown)
+			p->time_slice = p->requested_time;		// (Cooldown)
 			p->requested_time = p->next_requested_time;
 			p->first_time_slice = 0;
 			p->prio = 0;
@@ -819,7 +827,7 @@ void scheduler_tick(int user_tick, int system)
 			// Cooloff period is over, so revive as SHORT process.
 			dequeue_task(p, rq->overdue_array);
 			p->is_overdue = 0;
-			p->time_slice = next_requested_time;
+			p->time_slice = p->next_requested_time;
 			p->requested_time = p->next_requested_time;
 			p->first_time_slice = 0;
 			p->prio = p->static_prio;
@@ -1327,16 +1335,16 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	{
 		goto out_unlock;
 	} else if (policy == SCHED_SHORT){
-		is_overdue = 0;
+		p->is_overdue = 0;
 		p->cooloffs_left = lp.number_of_cooloffs;
-		p->timeslice = (lp.requested_time*HZ)/1000;
+		p->time_slice = (lp.requested_time*HZ)/1000;
 		p->requested_time = (lp.requested_time*HZ)/1000;
 		p->static_prio = effective_prio(p);
 		p->prio = effective_prio(p);
 		p->requested_cooloffs = lp.number_of_cooloffs;
 		dequeue_task(p, p->array);
 		enqueue_task(p, rq->short_array);
-		p->array = short_array;
+		p->array = rq->short_array;
 		set_need_resched();
 		goto out_unlock;
 	}
@@ -1419,8 +1427,8 @@ asmlinkage long sys_sched_getparam(pid_t pid, struct sched_param *param)
 
 	//#BENITZIK
 	lp.sched_priority = p->rt_priority;
-	lp.number_of_cooloffs = requested_cooloffs;
-	lp.requested_time = requested_time_ms;
+	lp.number_of_cooloffs = p->requested_cooloffs;
+	lp.requested_time = p->requested_time_ms;
 	
 	read_unlock(&tasklist_lock);
 
@@ -1817,8 +1825,8 @@ void __init sched_init(void)
 			// delimiter for bitsearch
 			__set_bit(MAX_PRIO, array->bitmap);
 		}
-		nr_sched_short = 0;//#BENITZIK: init number of short threads
-		nr_sched_short_overdue = 0;//#BENITZIK: init number of short-overdue threads
+		// rq->short_array->nr_sched_short = 0;//#BENITZIK: init number of short threads
+		// rq->overdue_array->nr_sched_short_overdue = 0;//#BENITZIK: init number of short-overdue threads
 	}
 	/*
 	 * We have to do a little magic to get the first
@@ -2089,21 +2097,18 @@ int ll_copy_from_user(void *to, const void *from_user, unsigned long len)
 }
 
 
-int sys_is_SHORT(int pid){//syscall #243
+int sys_is_SHORT(int pid) {		//syscall #243
 
 	//check pid
-	if (pid < 0){
-		return -EINVAL
-	}
-	p = find_process_by_pid(pid);
-	if (!p){
+	if (pid < 0)
+		return -EINVAL;
+
+	task_t *p = find_process_by_pid(pid);
+	if (!p)
 		return -ESRCH;
-	}
 
 	if (p->policy != SCHED_SHORT)
-	{
 		return -EINVAL;
-	}
 
 	return !p->is_overdue;
 }
@@ -2111,43 +2116,38 @@ int sys_is_SHORT(int pid){//syscall #243
 int sys_remaining_time(int pid){//syscall #244
 
 	//check pid
-	if (pid < 0){
-		return -EINVAL
-	}
-	p = find_process_by_pid(pid);
-	if (!p){
+	if (pid < 0)
+		return -EINVAL;
+
+	task_t *p = find_process_by_pid(pid);
+	if (!p)
 		return -ESRCH;
-	}
 
 	if (p->policy != SCHED_SHORT)
-	{
 		return -EINVAL;
-	}
-	if((p->timeslice*1000)/HZ > 3000){
+
+	if((p->time_slice*1000)/HZ > 3000)
 		return 3000;
-	}
-	return (p->timeslice*1000)/HZ;
+
+	return (p->time_slice*1000)/HZ;
 }
 
 int sys_remaining_cooloffs(int pid){//syscall #245
 
 	//check pid
-	if (pid < 0){
-		return -EINVAL
-	}
-	p = find_process_by_pid(pid);
-	if (!p){
-		return -ESRCH;
-	}
-
-	if (p->policy != SCHED_SHORT)
-	{
+	if (pid < 0)
 		return -EINVAL;
-	}
+	
+	task_t *p = find_process_by_pid(pid);
+	if (!p)
+		return -ESRCH;
+	
+	if (p->policy != SCHED_SHORT)
+		return -EINVAL;
+	
 	if (p->cooloffs_left < 0)
-	{
 		return 0;
-	}
+	
 	return p->cooloffs_left;
 }
 
