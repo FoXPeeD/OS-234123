@@ -737,6 +737,17 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	if (!current->time_slice)
 		BUG();
 	
+	if (current->policy != SCHED_SHORT)
+	{
+		p->is_overdue = 0;
+		p->cooloffs_left = 0;
+		p->requested_time = 0;
+		p->next_requested_time = 0;
+		p->requested_time_ms = 0;
+		p->requested_cooloffs = 0;
+		p->insert_at_front = 0;
+	}
+
 	//#BENITZIK
 	if (current->policy == SCHED_SHORT) {
 		p->cooloffs_left = (current->cooloffs_left + 1) >> 1;
