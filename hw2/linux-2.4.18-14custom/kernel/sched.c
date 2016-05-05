@@ -2128,7 +2128,8 @@ int sys_remaining_time(int pid){//syscall #244
 
 	if((p->time_slice*1000)/HZ > 3000)
 		return 3000;
-
+	if (p->cooloffs_left < 0)
+		return 0;
 	return (p->time_slice*1000)/HZ;
 }
 
