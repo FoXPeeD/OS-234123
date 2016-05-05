@@ -411,8 +411,9 @@ int wake_up_process(task_t * p)
 	return try_to_wake_up(p, 0);
 }
 
-void push_to_back(struct task_struct *p, prio_array_t *array) {
+void push_to_back(struct task_struct *p) {
 	runqueue_t *rq = this_rq_lock();
+	array = p->array;
 	dequeue_task(p, array);
 	enqueue_task(p, array);
 	rq_unlock(rq);
@@ -450,11 +451,13 @@ void wake_up_forked_process(task_t * p)
  */
 void sched_exit(task_t * p)
 {
+	//#BENITZIK: TODO: check what to do if the son (p) is SHORT
+	if (current->policy == SCHED_SHORT)
+	{
+		return;
+	}
 	__cli();
-	//#BENITZIK
-	if (p->first_time_slice 
-		&& current->policy != SCHED_SHORT 
-		&& p->policy != SCHED_SHORT) {
+	if (p->first_time_slice) {
 		current->time_slice += p->time_slice;
 		if (unlikely(current->time_slice > MAX_TIMESLICE))
 			current->time_slice = MAX_TIMESLICE;
@@ -2128,8 +2131,7 @@ int sys_remaining_time(int pid){//syscall #244
 
 	if((p->time_slice*1000)/HZ > 3000)
 		return 3000;
-	if (p->cooloffs_left < 0)
-		return 0;
+
 	return (p->time_slice*1000)/HZ;
 }
 
