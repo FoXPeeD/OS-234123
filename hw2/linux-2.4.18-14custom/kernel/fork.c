@@ -737,6 +737,17 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	if (!current->time_slice)
 		BUG();
 	
+	if (current->policy != SCHED_SHORT)
+	{
+		p->is_overdue = 0;
+		p->cooloffs_left = 0;
+		p->requested_time = 0;
+		p->next_requested_time = 0;
+		p->requested_time_ms = 0;
+		p->requested_cooloffs = 0;
+		p->insert_at_front = 0;
+	}
+
 	//#BENITZIK
 	if (current->policy == SCHED_SHORT) {
 		p->cooloffs_left = (current->cooloffs_left + 1) >> 1;
@@ -803,19 +814,23 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	
 
 	//#BENITZIK
-	if (p->policy == SCHED_SHORT)
+	if (p->policy == SCHED_SHORT && !p->is_overdue)
 		p->insert_at_front = 1;
 
 	wake_up_forked_process(p);	/* do this last */
 	++total_forks;
 	
-	//#BENITZIK - If short, reschedule parent no matter what 
-	if (current->policy == SCHED_SHORT) {
+	//#BENITZIK - If short and not overdue, reschedule parent no matter what 
+	if (current->policy == SCHED_SHORT && !p->is_overdue) {
 		push_to_back(current);
 		current->need_resched = 1;
 		goto fork_out;
 	}
-	
+	if (current->policy == SCHED_SHORT && p->is_overdue) {
+		current->need_resched = 1;
+		goto fork_out;
+	}
+
 	if (clone_flags & CLONE_VFORK)
 		wait_for_completion(&vfork);
 	else

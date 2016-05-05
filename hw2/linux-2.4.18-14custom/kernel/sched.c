@@ -925,7 +925,7 @@ void scheduler_tick(int user_tick, int system)
 			p->time_slice = p->requested_time;		// (Cooldown)
 			p->requested_time = p->next_requested_time;
 			p->first_time_slice = 0;
-			p->prio = MAX_PRIO-1;
+			p->prio = MAX_PRIO - 1;
 			p->cooloffs_left--;
 			printk("Time slice expired #3.\n");
 			set_tsk_need_resched(p);
@@ -1003,6 +1003,7 @@ asmlinkage void schedule(void)
 
 need_resched:
 	prev = current;
+	printk("current pid: %d",prev->pid);
 	rq = this_rq();
 
 	release_kernel_lock(prev, smp_processor_id());
@@ -1284,7 +1285,7 @@ void set_user_nice(task_t *p, long nice)
 	}
 	if (p->policy == SCHED_SHORT && p->is_overdue)	//#BENITZIK: if overdue skip dequeue/enqueue
 	{
-		p->prio = 0;
+		p->prio = MAX_PRIO - 1;
 		p->static_prio = NICE_TO_PRIO(nice);
 		goto out_unlock;
 	}
@@ -1484,6 +1485,10 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	//#BENITZIK
 	p->requested_time_ms = lp.requested_time;
 	p->next_requested_time = (lp.requested_time*HZ)/1000;
+	if (!p->next_requested_time)
+	{
+		p->next_requested_time = 1;
+	}
 	if (was_policy_negative){
 		retval = 0;
 		goto out_unlock;
@@ -1494,6 +1499,11 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		p->cooloffs_left = lp.number_of_cooloffs;
 		p->time_slice = (lp.requested_time*HZ)/1000;
 		p->requested_time = (lp.requested_time*HZ)/1000;
+		if (!p->next_requested_time)
+		{
+			p->next_requested_time = 1;
+			p->time_slice;
+		}
 		p->static_prio = effective_prio(p);
 		p->prio = effective_prio(p);
 		p->requested_cooloffs = lp.number_of_cooloffs;

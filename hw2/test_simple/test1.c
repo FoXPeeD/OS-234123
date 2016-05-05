@@ -4,7 +4,7 @@
 #include  <stdio.h>
 #include <unistd.h>
 #include <errno.h>
-#include "short_wrappers.h"
+#include "hw2_syscalls.h"
 #include "test_utilities.h"
 
 #define SERVER_STR(is_server) ((is_server) ? "server" : "client")
@@ -48,6 +48,7 @@ typedef struct data {
 
 int test1() {
     int child = fork();
+	
     int i;
     data_t* smem;
     pid_t mypid;
@@ -61,6 +62,7 @@ int test1() {
         smem->curr = 0;
         
         mypid = getpid();
+		printf("mypid (son) = %d\n",mypid);
         ASSERT_POSITIVE(mypid);
         printf("Log #1\n");
         nice(1); // be nicer than child
@@ -73,13 +75,12 @@ int test1() {
         printf("Log #4\n");
         
         smem->arr[smem->curr] = FATHER+0; // init value
-        
+        //return 0;
         ASSERT_ZERO(sched_setscheduler(child, SCHED_SHORT, &params)); // now we lost control until child will be overdue
         printf("Log #5\n");
         
         // child got into overdue. we gained control again. we should still be short here.
         smem->arr[++smem->curr] = FATHER+1;
-        
         while (is_SHORT(mypid)) ;
         printf("Log #6\n");
         smem->arr[++smem->curr] = FATHER+(1*10)+OVERDUE_PERIOD; // got into first overdue period
@@ -139,6 +140,7 @@ int test1() {
         
     } else {
         pid_t mypid = getpid();
+		printf("mypid (parent) = %d\n",mypid);
         ASSERT_POSITIVE(mypid);
         
         while (is_SHORT(mypid) != 1) ;
