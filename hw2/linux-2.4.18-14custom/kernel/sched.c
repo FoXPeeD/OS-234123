@@ -2263,7 +2263,7 @@ int ll_copy_from_user(void *to, const void *from_user, unsigned long len)
 int sys_is_SHORT(int pid) {		//syscall #243
 
 	//check pid
-	if (pid < 0)
+	if (pid <= 0)//if the pid is not valid or idle process status is asked
 		return -EINVAL;
 
 	task_t *p = find_process_by_pid(pid);
