@@ -1,0 +1,9 @@
+#!/bin/bash
+
+./moveAll
+
+gcc test1.c -o tst1
+
+./tst1
+
+echo DONE RUNNING TESTS!
