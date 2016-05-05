@@ -1360,7 +1360,7 @@ static inline task_t *find_process_by_pid(pid_t pid)
 static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 {
 	struct sched_param lp;
-	int retval = -EINVAL-2000;
+	int retval = -EINVAL;
 	prio_array_t *array;
 	unsigned long flags;
 	runqueue_t *rq;
@@ -1396,13 +1396,13 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	//#BENITZIK: if task is already SHORT.
 	if (p->policy == SCHED_SHORT && policy >= 0) 
 	{
-		retval = -EPERM-1000;
+		retval = -EPERM;
 		goto out_unlock;
 	}
 	if (policy < 0)
 		policy = p->policy;
 	else {
-		retval = -EINVAL-2001;
+		retval = -EINVAL;
 		if (policy != SCHED_FIFO && policy != SCHED_RR &&
 				policy != SCHED_OTHER && policy != SCHED_SHORT)		//#BENITZIK
 			goto out_unlock;
@@ -1412,7 +1412,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	 * Valid priorities for SCHED_FIFO and SCHED_RR are
 	 * 1..MAX_USER_RT_PRIO-1, valid priority for SCHED_OTHER is 0.
 	 */
-	retval = -EINVAL-2002;
+	retval = -EINVAL;
 	if (lp.sched_priority < 0 || lp.sched_priority > MAX_USER_RT_PRIO-1)
 		goto out_unlock;
 	if ((policy == SCHED_OTHER) != (lp.sched_priority == 0))
@@ -1425,7 +1425,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 			goto out_unlock;
 		if (policy==SCHED_SHORT && p->policy != SCHED_OTHER)
 		{
-			retval = -EPERM-1001;
+			retval = -EPERM;
 			goto out_unlock;
 		}
 	} else if (policy == SCHED_SHORT) {		//#BENITZIK: if arrived from set_param ignore number_of_cooloffs
@@ -1433,7 +1433,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 			goto out_unlock;
 	}
 
-	retval = -EPERM-1002;
+	retval = -EPERM;
 	//#BENITZIK: TODO:handle permissions
 	if ((policy == SCHED_FIFO || policy == SCHED_RR) &&
 	    !capable(CAP_SYS_NICE))
