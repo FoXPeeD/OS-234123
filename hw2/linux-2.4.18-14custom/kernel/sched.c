@@ -1158,17 +1158,26 @@ void set_user_nice(task_t *p, long nice)
 		p->static_prio = NICE_TO_PRIO(nice);
 		goto out_unlock;
 	}
+	if (p->policy == SCHED_SHORT && p->is_overdue)	//#BENITZIK: if overdue skip dequeue/enqueue
+	{
+		p->prio = 0;
+		p->static_prio = NICE_TO_PRIO(nice);
+		goto out_unlock;
+	}
+	if (p->policy == SCHED_SHORT && !p->is_overdue) //#BENITZIK
+	{
+		//if short doesnt changes its static priority just exit
+		if (p->static_prio == NICE_TO_PRIO(nice))
+		{
+			goto out_unlock;
+		}
+	}
+	int old_static = p->static_prio;
 	array = p->array;
 	if (array)
 		dequeue_task(p, array);
 	p->static_prio = NICE_TO_PRIO(nice);
-
-	//#BENITZIK: if overdue keep prio at 0 (but static was updated)
-	if (p->policy == SCHED_SHORT && p->is_overdue)
-	{
-		p->prio = 0;
-	} else 
-		p->prio = NICE_TO_PRIO(nice);
+	p->prio = NICE_TO_PRIO(nice);
 
 	if (array) {
 		enqueue_task(p, array);
@@ -1178,6 +1187,10 @@ void set_user_nice(task_t *p, long nice)
 		 */
 		if ((NICE_TO_PRIO(nice) < p->static_prio) || (p == rq->curr))
 			resched_task(rq->curr);
+	}
+	if (p->policy == SCHED_SHORT && !p->is_overdue)	//#BENITZIK: if short changes its priority reschedule
+	{
+		resched_task(rq->curr);
 	}
 out_unlock:
 	task_rq_unlock(rq, &flags);
