@@ -2110,7 +2110,7 @@ int sys_is_SHORT(int pid) {		//syscall #243
 
 	task_t *p = find_process_by_pid(pid);
 	if (!p)
-		return -ESRCH;
+		return -EINVAL;
 
 	if (p->policy != SCHED_SHORT)
 		return -EINVAL;
@@ -2126,7 +2126,7 @@ int sys_remaining_time(int pid){//syscall #244
 
 	task_t *p = find_process_by_pid(pid);
 	if (!p)
-		return -ESRCH;
+		return -EINVAL;
 
 	if (p->policy != SCHED_SHORT)
 		return -EINVAL;
@@ -2145,7 +2145,7 @@ int sys_remaining_cooloffs(int pid){//syscall #245
 	
 	task_t *p = find_process_by_pid(pid);
 	if (!p)
-		return -ESRCH;
+		return -EINVAL;
 	
 	if (p->policy != SCHED_SHORT)
 		return -EINVAL;
