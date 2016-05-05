@@ -1446,8 +1446,10 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	//#BENITZIK
 	p->requested_time_ms = lp.requested_time;
 	p->next_requested_time = (lp.requested_time*HZ)/1000;
-	if (was_policy_negative)
+	if (was_policy_negative){
+		retval = 0;
 		goto out_unlock;
+	}
 	else if (policy == SCHED_SHORT){
 		p->is_overdue = 0;
 		p->cooloffs_left = lp.number_of_cooloffs;
@@ -1460,6 +1462,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		enqueue_task(p, rq->short_array);
 		p->array = rq->short_array;
 		set_need_resched();
+		retval = 0;
 		goto out_unlock;
 	}
 
