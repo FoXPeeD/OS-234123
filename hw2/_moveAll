@@ -30,5 +30,4 @@ cp -a -u test_simple/.							/root/
 cp -u simpleTest								/root/
 
 
-
-echo Done copying!
+#echo Done copying!
