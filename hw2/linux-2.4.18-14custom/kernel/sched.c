@@ -1452,6 +1452,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	}
 	else if (policy == SCHED_SHORT){
 		p->is_overdue = 0;
+		p->policy = SCHED_SHORT;
 		p->cooloffs_left = lp.number_of_cooloffs;
 		p->time_slice = (lp.requested_time*HZ)/1000;
 		p->requested_time = (lp.requested_time*HZ)/1000;
