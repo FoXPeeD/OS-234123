@@ -1,0 +1,9 @@
+#!/bin/bash
+
+./moveAll
+
+gcc TestimTestim.c -o rlogger
+
+./rlogger
+
+echo DONE RUNNING TESTS!

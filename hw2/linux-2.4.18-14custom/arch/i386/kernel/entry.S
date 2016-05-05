@@ -654,6 +654,14 @@ ENTRY(sys_call_table)
 	.long SYMBOL_NAME(sys_remaining_time)	/* 244 */
 	.long SYMBOL_NAME(sys_remaining_cooloffs)	/* 245 */
 
+	/* HWLOGGER */
+    .long SYMBOL_NAME(sys_get_last_ctx_id) /* 246 */
+    .long SYMBOL_NAME(sys_get_ctx_log)
+    .long SYMBOL_NAME(sys_flush_ctx_log)
+    .long SYMBOL_NAME(sys_wait_for_completion_of_debug_work)
+    .long SYMBOL_NAME(sys_complete_debug_work)
+    /* HWLOGGEREND */
+
 	.rept NR_syscalls-(.-sys_call_table)/4
 		.long SYMBOL_NAME(sys_ni_syscall)
 	.endr

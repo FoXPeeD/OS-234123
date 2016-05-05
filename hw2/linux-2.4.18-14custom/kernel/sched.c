@@ -27,6 +27,30 @@
 #include <linux/completion.h>
 #include <linux/kernel_stat.h>
 
+/* HWLOGGER */
+#include "kassert.h"
+#define TASK_SHORT(p) ((p)->policy == SCHED_SHORT)
+#define TASK_OVERDUE(p) ((p)->is_overdue)
+#define TASK_SHORT_OVERDUE(p) (TASK_SHORT(p) && TASK_OVERDUE(p))
+#define TASK_OVERDUE_FOREVER(p) (TASK_SHORT_OVERDUE(p) && (p)->cooloffs_left == -1)
+#define TASK_SHORT_NON_OVERDUE(p) (TASK_SHORT(p) && !TASK_OVERDUE(p))
+#define TASK_IDLE(p) (task_rq(p)->idle == (p))
+#define OVERDUE_QUEUE_PRIO (MAX_RT_PRIO)
+#define TASK_PRIO_IN_PRIO_ARR(p) (TASK_SHORT_OVERDUE(p) ? OVERDUE_QUEUE_PRIO : (p)->prio)
+#define TASK_QUEUE(p, arr) ((arr)->queue + TASK_PRIO_IN_PRIO_ARR(p))
+static inline size_t list_length(list_t* lst) {
+    size_t size = 0;
+	list_t *curr;
+	list_for_each(curr, lst){
+		size++;
+	}
+	return size;
+}
+/* HWLOGGEREND */
+
+
+
+
 /*
  * Convert user-nice values [ -20 ... 0 ... 19 ]
  * to static priority [ MAX_RT_PRIO..MAX_PRIO-1 ],
@@ -207,6 +231,42 @@ static inline void rq_unlock(runqueue_t *rq)
 	spin_unlock(&rq->lock);
 	local_irq_enable();
 }
+
+
+
+/* HWLOGGER */
+/* Note: `ctx_reason_t` defined in sched.h */
+#define ENABLE_CTX_LOG  // hw2 TODO: remove on submit !!!
+
+#ifdef ENABLE_CTX_LOG
+#include "ctx_log.h"
+#else
+static void ctx_logs_init() {}
+void set_last_needresched_reason(task_t*, ctx_reason_t) {}
+void set_last_needresched_reason_if_default(task_t*, ctx_reason_t) {}
+inline static void log_ctx(task_t*, task_t*) {}
+/* TODO: check if we are allowed to keep the syscalls in entry.S on submit */
+asmlinkage int sys_get_last_ctx_id(ctx_idx_t*) {
+    return -1;
+}
+asmlinkage int sys_get_ctx_log(ctx_log_record_t*, int) {
+    return -1;
+}
+asmlinkage int sys_flush_ctx_log() {
+    return -1;
+}
+asmlinkage int sys_wait_for_completion_of_debug_work() {
+    return -1;
+}
+asmlinkage int sys_complete_debug_work() {
+    return -1;
+}
+#endif
+/* HWLOGGEREND */
+
+
+
+
 
 
 /*
@@ -399,7 +459,15 @@ repeat_lock_task:
 		 * If sync is set, a resched_task() is a NOOP
 		 */
 		if (p->prio < rq->curr->prio)
+		
+
+		/* HWLOGGER */
+		{
+			set_last_needresched_reason(rq->curr, CTX_TRY_TO_WAKE_UP);  /* hw2 ctx_log */
 			resched_task(rq->curr);
+		}
+		/* HWLOGGEREND */	//KEEP IN IF: resched_task(rq->curr);
+
 		success = 1;
 	}
 	p->state = TASK_RUNNING;
@@ -415,7 +483,7 @@ int wake_up_process(task_t * p)
 
 void push_to_back(struct task_struct *p) {
 	runqueue_t *rq = this_rq_lock();
-	array = p->array;
+	prio_array_t *array = p->array;
 	dequeue_task(p, array);
 	enqueue_task(p, array);
 	rq_unlock(rq);
@@ -438,6 +506,11 @@ void wake_up_forked_process(task_t * p)
 	}
 	p->cpu = smp_processor_id();
 	activate_task(p, rq);
+
+	/* HWLOGGER */
+	set_last_needresched_reason_with_info(current, CTX_DO_FORK, p->pid);  /* hw2 ctx_log */
+    /* HWLOGGEREND */
+
 
 	rq_unlock(rq);
 }
@@ -782,6 +855,11 @@ void scheduler_tick(int user_tick, int system)
 	if (p->array != rq->active 
 		&& p->array != rq->short_array 
 		&& p->array != rq->overdue_array) {		//#BENITZIK
+
+		/* HWLOGGER */
+		set_last_needresched_reason(p, CTX_SCHEDULER_TICK);
+		/* HWLOGGEREND */
+
 		set_tsk_need_resched(p);
 		return;
 	}
@@ -794,6 +872,11 @@ void scheduler_tick(int user_tick, int system)
 		if ((p->policy == SCHED_RR) && !--p->time_slice) {
 			p->time_slice = TASK_TIMESLICE(p);
 			p->first_time_slice = 0;
+
+			/* HWLOGGER */
+			set_last_needresched_reason(p, CTX_SCHEDULER_TICK);
+			/* HWLOGGEREND */
+
 			set_tsk_need_resched(p);
 
 			/* put it at the end of the queue: */
@@ -844,6 +927,11 @@ void scheduler_tick(int user_tick, int system)
 	}
 
 	if (!--p->time_slice) {
+
+		/* HWLOGGER */
+		set_last_needresched_reason(p, CTX_SCHEDULER_TICK);
+		/* HWLOGGEREND */
+
 		dequeue_task(p, rq->active);
 		set_tsk_need_resched(p);
 		p->prio = effective_prio(p);
@@ -869,13 +957,6 @@ void scheduling_functions_start_here(void) { }
 
 /* 
  * 'schedule()' is the main scheduler function.
- *
- * //#BENITZIK
- * We should do:
- *
- *
- *
- *
  *
  */
 asmlinkage void schedule(void)
@@ -970,6 +1051,10 @@ pick_next_task:
 switch_tasks:
 	prefetch(next);
 	clear_tsk_need_resched(prev);
+
+	/* HWLOGGER */
+	log_ctx(prev, next);
+	/* HWLOGGEREND */
 
 	if (likely(prev != next)) {
 		rq->nr_switches++;
@@ -1083,6 +1168,7 @@ void wait_for_completion(struct completion *x)
 
 #define	SLEEP_ON_HEAD					\
 	spin_lock_irqsave(&q->lock,flags);		\
+	set_last_needresched_reason(current, CTX_SLEEP_ON); /* HWLOGGER */ /* hw2 ctx_log */ /* HWLOGGEREND */\
 	__add_wait_queue(q, &wait);			\
 	spin_unlock(&q->lock);
 
@@ -1180,6 +1266,11 @@ void set_user_nice(task_t *p, long nice)
 	p->prio = NICE_TO_PRIO(nice);
 
 	if (array) {
+
+		/* HWLOGGER */
+		set_last_needresched_reason(rq->curr, CTX_SET_USER_NICE);
+		/* HWLOGGEREND */
+
 		enqueue_task(p, array);
 		/*
 		 * If the task is running and lowered its priority,
@@ -1338,7 +1429,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 			retval = -EPERM-1001;
 			goto out_unlock;
 		}
-	} else if (policy == SCHED_SHORT) {		//if arrived from set_param ignore number_of_cooloffs
+	} else if (policy == SCHED_SHORT) {		//#BENITZIK: if arrived from set_param ignore number_of_cooloffs
 		if(lp.requested_time <= 0 || lp.requested_time > 3000)
 			goto out_unlock;
 	}
@@ -1357,9 +1448,8 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	p->requested_time_ms = lp.requested_time;
 	p->next_requested_time = (lp.requested_time*HZ)/1000;
 	if (was_policy_negative)
-	{
 		goto out_unlock;
-	} else if (policy == SCHED_SHORT){
+	else if (policy == SCHED_SHORT){
 		p->is_overdue = 0;
 		p->cooloffs_left = lp.number_of_cooloffs;
 		p->time_slice = (lp.requested_time*HZ)/1000;
@@ -1387,7 +1477,14 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	else
 		p->prio = p->static_prio;
 	if (array)
+
+	/* HWLOGGER */
+	{
+		set_last_needresched_reason(rq->curr, CTX_SETSCHEDULER);  /* hw2 ctx_log */
 		activate_task(p, task_rq(p));
+	}
+	/* HWLOGGEREND */	// IF HAD: activate_task(p, task_rq(p));
+
 
 out_unlock:
 	task_rq_unlock(rq, &flags);
@@ -1606,6 +1703,10 @@ asmlinkage long sys_sched_yield(void)
 
 out_unlock:
 	spin_unlock(&rq->lock);
+
+	/* HWLOGGER */
+	set_last_needresched_reason(current, CTX_YIELD);  /* hw2 ctx_log */
+	/* HWLOGGEREND */
 
 	schedule();
 
@@ -1827,6 +1928,11 @@ void __init sched_init(void)
 	int i, j, k;
 
 	for (i = 0; i < NR_CPUS; i++) {
+
+		/* HWLOGGER */
+		ctx_logs_init(); /* hw2 ctx_log */
+		/* HWLOGGEREND */
+		
 		prio_array_t *array;
 
 		rq = cpu_rq(i);

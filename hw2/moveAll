@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "/mnt/hgfs/OS-bwis/hw2/linux-2.4.18-14custom/"
+cd "/mnt/hgfs/OS-bwis/hw2/"
 
 cp _moveAll		/root/
 
