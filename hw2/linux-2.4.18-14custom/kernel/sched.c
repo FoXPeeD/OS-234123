@@ -837,25 +837,34 @@ void scheduler_tick(int user_tick, int system)
 	runqueue_t *rq = this_rq();
 	task_t *p = current;
 
+	printk("In tick 1.\n");
+	if (p->policy == SCHED_SHORT){
+		printk("%d, overdue=%d\n", p->time_slice, p->is_overdue);
+	}
+
+	printk("In tick 2.\n");
 	if (p == rq->idle) {
 		if (local_bh_count(cpu) || local_irq_count(cpu) > 1)
 			kstat.per_cpu_system[cpu] += system;
 #if CONFIG_SMP
-		idle_tick();
+		{ printk("In tick 3.\n"); idle_tick(); }
 #endif
 		return;
 	}
+	printk("In tick 4.\n");
 	if (TASK_NICE(p) > 0)
 		kstat.per_cpu_nice[cpu] += user_tick;
 	else
 		kstat.per_cpu_user[cpu] += user_tick;
 	kstat.per_cpu_system[cpu] += system;
 
+	printk("In tick 5.\n");
 	/* Task might have expired already, but not scheduled off yet */
 	if (p->array != rq->active 
 		&& p->array != rq->short_array 
-		&& p->array != rq->overdue_array) {		//#BENITZIK
+		&& p->array != rq->overdue_array) {		//#BENITZIKroot
 
+		printk("In tick 6.\n");
 		/* HWLOGGER */
 		set_last_needresched_reason(p, CTX_SCHEDULER_TICK);
 		/* HWLOGGEREND */
@@ -863,6 +872,7 @@ void scheduler_tick(int user_tick, int system)
 		set_tsk_need_resched(p);
 		return;
 	}
+	printk("In tick 7.\n");
 	spin_lock(&rq->lock);
 	if (unlikely(rt_task(p))) {
 		/*
@@ -873,16 +883,20 @@ void scheduler_tick(int user_tick, int system)
 			p->time_slice = TASK_TIMESLICE(p);
 			p->first_time_slice = 0;
 
+			printk("In tick 8.\n");
 			/* HWLOGGER */
 			set_last_needresched_reason(p, CTX_SCHEDULER_TICK);
 			/* HWLOGGEREND */
 
 			set_tsk_need_resched(p);
 
+			printk("In tick 9.\n");
 			/* put it at the end of the queue: */
 			dequeue_task(p, rq->active);
 			enqueue_task(p, rq->active);
+			printk("In tick 10.\n");
 		}
+		printk("In tick 11.\n");
 		goto out;
 	}
 	/*
@@ -911,7 +925,7 @@ void scheduler_tick(int user_tick, int system)
 			p->time_slice = p->requested_time;		// (Cooldown)
 			p->requested_time = p->next_requested_time;
 			p->first_time_slice = 0;
-			p->prio = 0;
+			p->prio = MAX_PRIO-1;
 			p->cooloffs_left--;
 			printk("Time slice expired #3.\n");
 			set_tsk_need_resched(p);
@@ -961,6 +975,7 @@ void scheduler_tick(int user_tick, int system)
 			enqueue_task(p, rq->active);
 	}
 out:
+printk("In tick 12 (out).\n");
 #if CONFIG_SMP
 	if (!(jiffies % BUSY_REBALANCE_TICK))
 		load_balance(rq, 0);
@@ -976,7 +991,7 @@ void scheduling_functions_start_here(void) { }
  */
 asmlinkage void schedule(void)
 {
-	printk("Entered schedule #1.\n");
+	printk("Entered schedule.\n");
 	task_t *prev, *next;
 	runqueue_t *rq;
 	prio_array_t *array;
@@ -1020,10 +1035,10 @@ pick_next_task:
 		goto switch_tasks;
 	}
 
-	printk("Entered schedule #2.\n");
 	// Find and run a realtime, if exists.
 	array = rq->active;
 	if (array->nr_active) {
+		printk("Run a REALTIME (of %d).\n", array->nr_active);
 		idx = sched_find_first_bit(array->bitmap);
 		queue = array->queue + idx;
 		next = list_entry(queue->next, task_t, run_list);
@@ -1031,19 +1046,19 @@ pick_next_task:
 			goto switch_tasks;
 	}
 
-	printk("Entered schedule #3.\n");
 	// Find and run a short, if exists.
 	array = rq->short_array;
 	if (array->nr_active) {
+		printk("Run a SHORT (of %d).\n", array->nr_active);
 		idx = sched_find_first_bit(array->bitmap);
 		queue = array->queue + idx;
 		next = list_entry(queue->next, task_t, run_list);
 		goto switch_tasks;
 	}
 
-	printk("Entered schedule #4.\n");
 	// If no OTHER tasks exist, run OVERDUE-SHORT
 	if (!rq->active->nr_active && !rq->expired->nr_active) {
+		printk("Running OVERDUE-SHORT (of %d).\n", rq->overdue_array->nr_active);
 		array = rq->overdue_array;
 		idx = sched_find_first_bit(array->bitmap);
 		queue = array->queue + idx;
@@ -1051,26 +1066,25 @@ pick_next_task:
 		goto switch_tasks;
 	}
 
-	printk("Entered schedule #5.\n");
 	// Otherwise (only OTHER processes exist),  
 	array = rq->active;
 	if (unlikely(!array->nr_active)) {
 		/*
 		 * Switch the active and expired arrays.
 		 */
+		printk("Returning all %d OTHERS to Active.\n", rq->expired->nr_active);
 		rq->active = rq->expired;
 		rq->expired = array;
 		array = rq->active;
 		rq->expired_timestamp = 0;
 	}
 
-	printk("Entered schedule #5.\n");
+	printk("Running OTHER (of %d).\n", array->nr_active);
 	idx = sched_find_first_bit(array->bitmap);
 	queue = array->queue + idx;
 	next = list_entry(queue->next, task_t, run_list);
 
 switch_tasks:
-	printk("Entered schedule #6.\n");
 	prefetch(next);
 	clear_tsk_need_resched(prev);
 
@@ -1082,7 +1096,7 @@ switch_tasks:
 		rq->nr_switches++;
 		rq->curr = next;
 	
-		printk("Entered schedule #7.\n");
+		printk("Doing context_switch.\n");
 		prepare_arch_switch(rq);
 		prev = context_switch(prev, next);
 		barrier();
@@ -1090,13 +1104,12 @@ switch_tasks:
 		finish_arch_switch(rq);
 	} else
 		spin_unlock_irq(&rq->lock);
-	printk("Entered schedule #7.\n");
 	finish_arch_schedule(prev);
 
 	reacquire_kernel_lock(current);
 	if (need_resched())
 		goto need_resched;
-	printk("Entered schedule #9.\n");
+	printk("Exiting schedule.\n");
 }
 
 /*
