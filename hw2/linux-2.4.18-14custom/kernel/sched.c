@@ -1162,7 +1162,14 @@ void set_user_nice(task_t *p, long nice)
 	if (array)
 		dequeue_task(p, array);
 	p->static_prio = NICE_TO_PRIO(nice);
-	p->prio = NICE_TO_PRIO(nice);
+
+	//#BENITZIK: if overdue keep prio at 0 (but static was updated)
+	if (p->policy == SCHED_SHORT && p->is_overdue)
+	{
+		p->prio = 0;
+	} else 
+		p->prio = NICE_TO_PRIO(nice);
+
 	if (array) {
 		enqueue_task(p, array);
 		/*
