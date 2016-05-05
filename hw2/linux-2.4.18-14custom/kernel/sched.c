@@ -450,13 +450,11 @@ void wake_up_forked_process(task_t * p)
  */
 void sched_exit(task_t * p)
 {
-	//#BENITZIK: TODO: check what to do if the son (p) is SHORT
-	if (current->policy == SCHED_SHORT)
-	{
-		return;
-	}
 	__cli();
-	if (p->first_time_slice) {
+	//#BENITZIK
+	if (p->first_time_slice 
+		&& current->policy != SCHED_SHORT 
+		&& p->policy != SCHED_SHORT) {
 		current->time_slice += p->time_slice;
 		if (unlikely(current->time_slice > MAX_TIMESLICE))
 			current->time_slice = MAX_TIMESLICE;
