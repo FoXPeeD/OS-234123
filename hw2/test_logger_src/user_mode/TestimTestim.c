@@ -141,6 +141,7 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 	req_find_next_rec_short_after_specific(second_short,log,log_actual_size,first_short);
 	req_find_next_rec_short_after_specific(third_short,log,log_actual_size,second_short);
 	
+	printf("child1=%d, child2=%d, child3=%d\n", child1, child2, child3);
 	ASSERT_EQUALS((first_short->next_info).pid,child1);
 	ASSERT_EQUALS((second_short->prev_info).pid,child1);
 	ASSERT_EQUALS((second_short->next_info).pid,child2);
