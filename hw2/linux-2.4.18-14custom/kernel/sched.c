@@ -920,7 +920,7 @@ void scheduler_tick(int user_tick, int system)
 			printk("Time slice expired #5.\n");
 		}
 		else if (p->is_overdue && p->cooloffs_left >= 0) {
-			printk("Cooloff expired, now reviving.\n")
+			printk("Cooloff expired, now reviving.\n");
 			// Cooloff period is over, so revive as SHORT process.
 			dequeue_task(p, rq->overdue_array);
 			printk("Reviving #2.\n");
