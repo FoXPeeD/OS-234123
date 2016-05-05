@@ -1756,7 +1756,7 @@ int main(void) {
 	RUN_TEST(testSetParam_UsedAsSetSchedulerWith_EveryPolicyIncludingSHORT_ShouldFailOnPERM);
 	
 	
-	Valka stress test
+	//Valka stress test
 	RUN_TEST(test_fork_stress);
 	return 0;
 }
