@@ -272,8 +272,10 @@ static inline void activate_task(task_t *p, runqueue_t *rq)
 	prio_array_t *array;
 
 	//#BENITZIK
-	if (p->policy == SCHED_SHORT)
+	if (p->policy == SCHED_SHORT && !p->is_overdue)
 		array = rq->short_array;
+	else if (p->policy == SCHED_SHORT && p->is_overdue)
+		array = rq->overdue_array;
 	else
 		array = rq->active;
 
