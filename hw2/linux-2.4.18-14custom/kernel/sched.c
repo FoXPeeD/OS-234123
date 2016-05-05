@@ -1258,7 +1258,6 @@ void set_user_nice(task_t *p, long nice)
 			goto out_unlock;
 		}
 	}
-	int old_static = p->static_prio;
 	array = p->array;
 	if (array)
 		dequeue_task(p, array);
