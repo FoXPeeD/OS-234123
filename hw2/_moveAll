@@ -24,4 +24,11 @@ cp -a -u test_logger_src/user_mode/.			/root/
 cp -u hw2_syscalls.h							/root/
 cp -u runTest									/root/
 
+
+cp -a -u test_simple/.							/root/
+
+cp -u simpleTest								/root/
+
+
+
 echo Done copying!
