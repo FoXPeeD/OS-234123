@@ -1474,6 +1474,10 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	//#BENITZIK
 	p->requested_time_ms = lp.requested_time;
 	p->next_requested_time = (lp.requested_time*HZ)/1000;
+	if (!p->next_requested_time)
+	{
+		p->next_requested_time = 1;
+	}
 	if (was_policy_negative){
 		retval = 0;
 		goto out_unlock;
@@ -1484,6 +1488,11 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		p->cooloffs_left = lp.number_of_cooloffs;
 		p->time_slice = (lp.requested_time*HZ)/1000;
 		p->requested_time = (lp.requested_time*HZ)/1000;
+		if (!p->next_requested_time)
+		{
+			p->next_requested_time = 1;
+			p->time_slice;
+		}
 		p->static_prio = effective_prio(p);
 		p->prio = effective_prio(p);
 		p->requested_cooloffs = lp.number_of_cooloffs;

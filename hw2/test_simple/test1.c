@@ -75,7 +75,7 @@ int test1() {
         printf("Log #4\n");
         
         smem->arr[smem->curr] = FATHER+0; // init value
-        return 0;
+        //return 0;
         ASSERT_ZERO(sched_setscheduler(child, SCHED_SHORT, &params)); // now we lost control until child will be overdue
         printf("Log #5\n");
         
