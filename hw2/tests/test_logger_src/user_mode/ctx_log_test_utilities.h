@@ -211,7 +211,7 @@ ctx_log_record_t* find_next_rec_non_sched_other_after_specific(ctx_log_record_t 
 ctx_log_record_t* find_next_rec_short(ctx_log_record_t rec[], int nr_records) {
     int i;
     for (i = 0; i < nr_records; ++i) {
-        if (rec[i].next_info.policy == SCHED_SHORT) {
+        if (rec[i].next_info.policy == SCHED_SHORT && rec[i].reason != CTX_DO_FORK) {
             return (rec+i);
         }
     }

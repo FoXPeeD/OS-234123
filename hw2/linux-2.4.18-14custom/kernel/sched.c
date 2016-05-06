@@ -839,7 +839,7 @@ void scheduler_tick(int user_tick, int system)
 	task_t *p = current;
 
 	if (p->policy == SCHED_SHORT) {
-		printk("%d, overdue=%d\n", p->time_slice, p->is_overdue);
+		printk("%d: %d, overdue=%d\n", p->pid, p->time_slice, p->is_overdue);
 	}
 
 	if (p == rq->idle) {
@@ -906,14 +906,11 @@ void scheduler_tick(int user_tick, int system)
 	if (p->sleep_avg)
 		p->sleep_avg--;
 
-	if (p->policy == SCHED_SHORT)
-		printk("%d, overdue=%d\n", p->time_slice, p->is_overdue);
-
 	//#BENITZIK - If overdue and time_slice is done: if it has cooloff cycles remaining, revive it. Otherwise, keep running.
 	if (p->policy == SCHED_SHORT && p->time_slice <= 1) {
-		printk("SHORT and time_slice=%d.\n", p->time_slice);
+		printk("%d's time_slice has just expired.\n", p->pid);
 		if (!p->is_overdue) {
-			printk("Time slice expired, now moving to overdue_array.\n");
+			printk("%d's Time slice expired, now moving it to overdue_array.\n", p->pid);
 			// SHORT's timeslice is up, downgrade to SHORT_OVERDUE.
 			dequeue_task(p, rq->short_array);
 			p->is_overdue = 1;
@@ -926,7 +923,7 @@ void scheduler_tick(int user_tick, int system)
 			enqueue_task(p, rq->overdue_array);
 		}
 		else if (p->is_overdue && p->cooloffs_left >= 0) {
-			printk("Cooloff expired, now reviving.\n");
+			printk("%d's cooloff expired, now reviving it.\n", p->pid);
 			// Cooloff period is over, so revive as SHORT process.
 			dequeue_task(p, rq->overdue_array);
 			p->is_overdue = 0;
@@ -939,7 +936,7 @@ void scheduler_tick(int user_tick, int system)
 		}
 		// It is overdue, so continue until exit or replaced by another process.
 		else
-			printk("Overdue SHORT but nother better to do.\n");
+			printk("%d is overdue, but there's nother better to do.\n", p->pid);
 		goto out;
 	}
 

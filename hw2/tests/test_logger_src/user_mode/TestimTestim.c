@@ -79,6 +79,7 @@ static int make_rt_child_become_short_with_params(pid_t child,int req_time,int c
 	return result;
 }
 static int make_rt_child_become_short(pid_t child){
+	// return make_rt_child_become_short_with_params(child,10,5);
 	return make_rt_child_become_short_with_params(child,MAX_REQUESTED_TIME,MIN_COOLOFF_CYCLES);
 }
 static int make_rt_child_become_super_short(pid_t child){
@@ -102,13 +103,12 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 	ASSERT_ZERO(make_me_rt());
 	is_SHORT(-777);
 
-	
 	// Creating 3 short procs, I am RT so they don't run yet.
 	pid_t child3 = fork();
 	if(child3==0){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_short(child3));
-		busyWait(2);
+		// busyWait(20);
 		sched_yield();
 		exit(33);
 	}
@@ -116,7 +116,7 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 	if(child2==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child2));
-		busyWait(2);
+		// busyWait(20);
 		sched_yield();
 		exit(22);
 	}
@@ -125,7 +125,7 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 	if(child1==0){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_short(child1));
-		busyWait(2);
+		// busyWait(20);
 		sched_yield();
 		exit(11);
 	}
@@ -144,8 +144,18 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
     ASSERT(first_short);
 	req_find_next_rec_short_after_specific(second_short,log,log_actual_size,first_short);
 	req_find_next_rec_short_after_specific(third_short,log,log_actual_size,second_short);
+	req_find_next_rec_short_after_specific(r4_short,log,log_actual_size,third_short);
+	req_find_next_rec_short_after_specific(r5_short,log,log_actual_size,r4_short);
+	req_find_next_rec_short_after_specific(r6_short,log,log_actual_size,r5_short);
 	
-	printf("child1=%d, child2=%d, child3=%d\n", child1, child2, child3);
+	printf("\nchild1=%d, child2=%d, child3=%d\n", child1, child2, child3);
+	printf("r1=%d %d, r2=%d %d, r3=%d %d, r4=%d %d, r5=%d %d, r6=%d %d\n",
+		(first_short->next_info).pid,(first_short->reason),
+		(second_short->next_info).pid, (second_short->reason),
+		(third_short->next_info).pid,(third_short->reason),
+		(r4_short->next_info).pid,(r4_short->reason),
+		(r5_short->next_info).pid,(r5_short->reason),
+		(r6_short->next_info).pid,(r6_short->reason));
 	ASSERT_EQUALS((first_short->next_info).pid,child1);
 	ASSERT_EQUALS((second_short->prev_info).pid,child1);
 	ASSERT_EQUALS((second_short->next_info).pid,child2);
