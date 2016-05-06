@@ -100,6 +100,7 @@ ctx_idx_t last_short_obtained_ctx_id;
 static bool testSimpleShorts_BetterPrioRunsFirst(){
 	get_last_ctx_id(&last_short_obtained_ctx_id);
 	ASSERT_ZERO(make_me_rt());
+
 	
 	// Creating 3 short procs, I am RT so they don't run yet.
 	pid_t child3 = fork();
@@ -140,6 +141,7 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 	req_find_next_rec_short_after_specific(second_short,log,log_actual_size,first_short);
 	req_find_next_rec_short_after_specific(third_short,log,log_actual_size,second_short);
 	
+	printf("child1=%d, child2=%d, child3=%d\n", child1, child2, child3);
 	ASSERT_EQUALS((first_short->next_info).pid,child1);
 	ASSERT_EQUALS((second_short->prev_info).pid,child1);
 	ASSERT_EQUALS((second_short->next_info).pid,child2);
@@ -149,6 +151,9 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 	free(log);
 	return true;
 }
+
+
+
 static bool testSimpleShorts_SamePrioRunInFIFO(){
 	get_last_ctx_id(&last_short_obtained_ctx_id);
 	ASSERT_ZERO(make_me_rt());
@@ -1705,7 +1710,6 @@ static bool testSetParam_UsedAsSetSchedulerWith_EveryPolicyIncludingSHORT_Should
 
 
 int main(void) {
-	RUN_TEST(testSimpleShorts_BetterPrioRunsFirst);
 	RUN_TEST(testSimpleShorts_SamePrioRunInFIFO);
 	RUN_TEST(testSimpleShorts_BestBecomesWorst_ImmediateSwitchAndRunInNewOrder);
 	RUN_TEST(testYieldingShorts_SingleBestYields_NoSwitch);
@@ -1754,8 +1758,8 @@ int main(void) {
 	RUN_TEST(testSetParam_UsedAsSetSchedulerWith_EveryPolicyIncludingSHORT_ShouldFailOnPERM);
 	
 	
-	// Valka stress test
-	// RUN_TEST(test_fork_stress);
+	//Valka stress test
+	//RUN_TEST(test_fork_stress);
 	return 0;
 }
 

@@ -14,23 +14,23 @@
 
 
 
-
+# Complex El-Ad Test
 \cp linux-2.4.18-14custom/arch/i386/kernel/traps.c		/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
 \cp linux-2.4.18-14custom/kernel/ctx_log.h					/usr/src/linux-2.4.18-14custom/kernel/
 \cp linux-2.4.18-14custom/kernel/exit.c					/usr/src/linux-2.4.18-14custom/kernel/
 \cp linux-2.4.18-14custom/kernel/kassert.h					/usr/src/linux-2.4.18-14custom/kernel/
 
-\cp -a test_logger_src/user_mode/.			/root/
+\cp -a tests/test_logger_src/user_mode/.			/root/
 \cp hw2_syscalls.h							/root/
 \cp runTest									/root/
 
 # Simple El-Ad Test
-\cp -a -u test_simple/.							/root/
+\cp -a -u tests/test_simple/.							/root/
 \cp simpleTest								/root/
 
 
 # Anna's friend's Test7
-\cp tests7/test2.c		/root/test.c
+#\cp tests/tests7/test10.c		/root/test.c
 
 
 #echo Done copying!

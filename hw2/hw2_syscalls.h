@@ -4,6 +4,9 @@
 #ifndef _HW2_SYSCALLS_H
 #define _HW2_SYSCALLS_H
 
+
+#include <errno.h>
+
 int is_SHORT(int pid){//syscall #243
 	unsigned int res;
 	__asm__

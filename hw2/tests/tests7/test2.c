@@ -325,7 +325,7 @@ int main(int argc, char** argv) {
     else {
     	int retval;
     	wait(&retval);
-    	//RUN_TEST(testManyForks);
+    	RUN_TEST(testManyForks);
     }
     return 0;
       /*sched_param_t params = {1, 2, 1};
