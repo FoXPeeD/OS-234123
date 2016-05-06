@@ -975,6 +975,8 @@ void scheduling_functions_start_here(void) { }
  */
 asmlinkage void schedule(void)
 {
+
+	print_sched_stats(current,0,1);
 	task_t *prev, *next;
 	runqueue_t *rq;
 	prio_array_t *array;
@@ -2315,8 +2317,12 @@ int sys_remaining_cooloffs(int pid){//syscall #245
 }
 
 
-void print_sched_stats(task_t *p,int all){
+void print_sched_stats(task_t *p,int all,int only_short){
 	
+	if (only_short && p->policy != SCHED_SHORT)
+	{
+		return;
+	}
 	int array_num;
 	int overdue_flag = p->is_overdue;
 	if (!p->array)
