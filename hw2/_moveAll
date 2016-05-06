@@ -1,33 +1,36 @@
 #!/bin/bash
 
-cp -u linux-2.4.18-14custom/arch/i386/kernel/entry.S		/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
-cp -u linux-2.4.18-14custom/include/asm-i386/unistd.h		/usr/src/linux-2.4.18-14custom/include/asm-i386/
-cp -u linux-2.4.18-14custom/include/linux/sched.h			/usr/src/linux-2.4.18-14custom/include/linux/
-cp -u linux-2.4.18-14custom/kernel/fork.c					/usr/src/linux-2.4.18-14custom/kernel/
-cp -u linux-2.4.18-14custom/kernel/sched.c					/usr/src/linux-2.4.18-14custom/kernel/
+\cp linux-2.4.18-14custom/arch/i386/kernel/entry.S		/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
+\cp linux-2.4.18-14custom/include/asm-i386/unistd.h		/usr/src/linux-2.4.18-14custom/include/asm-i386/
+\cp linux-2.4.18-14custom/include/linux/sched.h			/usr/src/linux-2.4.18-14custom/include/linux/
+\cp linux-2.4.18-14custom/kernel/fork.c					/usr/src/linux-2.4.18-14custom/kernel/
+\cp linux-2.4.18-14custom/kernel/sched.c				/usr/src/linux-2.4.18-14custom/kernel/
 
 
-cp -u hw2_syscalls.h			/usr/src/linux-2.4.18-14custom/
-cp -u main.c					/root/
+\cp hw2_syscalls.h		/usr/src/linux-2.4.18-14custom/
+\cp main.c				/root/
 
-cp -u ../compileKernel			/root/
-
-
+\cp ../compileKernel	/root/
 
 
-cp -u linux-2.4.18-14custom/arch/i386/kernel/traps.c		/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
-cp -u linux-2.4.18-14custom/kernel/ctx_log.h					/usr/src/linux-2.4.18-14custom/kernel/
-cp -u linux-2.4.18-14custom/kernel/exit.c					/usr/src/linux-2.4.18-14custom/kernel/
-cp -u linux-2.4.18-14custom/kernel/kassert.h					/usr/src/linux-2.4.18-14custom/kernel/
-
-cp -a -u test_logger_src/user_mode/.			/root/
-cp -u hw2_syscalls.h							/root/
-cp -u runTest									/root/
 
 
-cp -a -u test_simple/.							/root/
+\cp linux-2.4.18-14custom/arch/i386/kernel/traps.c		/usr/src/linux-2.4.18-14custom/arch/i386/kernel/
+\cp linux-2.4.18-14custom/kernel/ctx_log.h					/usr/src/linux-2.4.18-14custom/kernel/
+\cp linux-2.4.18-14custom/kernel/exit.c					/usr/src/linux-2.4.18-14custom/kernel/
+\cp linux-2.4.18-14custom/kernel/kassert.h					/usr/src/linux-2.4.18-14custom/kernel/
 
-cp -u simpleTest								/root/
+\cp -a test_logger_src/user_mode/.			/root/
+\cp hw2_syscalls.h							/root/
+\cp runTest									/root/
+
+# Simple El-Ad Test
+\cp -a -u test_simple/.							/root/
+\cp simpleTest								/root/
+
+
+# Anna's friend's Test7
+\cp tests7/test2.c		/root/test.c
 
 
 #echo Done copying!

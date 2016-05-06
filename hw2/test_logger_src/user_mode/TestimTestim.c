@@ -97,6 +97,27 @@ ctx_idx_t last_short_obtained_ctx_id;
 //////
 ////// tests on SHORTS that are initialized together and run to completion
 //////
+static bool testSimpleShorts_superSimple(){
+	get_last_ctx_id(&last_short_obtained_ctx_id);
+	ASSERT_ZERO(make_me_rt());
+
+	
+	// Creating 3 short procs, I am RT so they don't run yet.
+	pid_t child3 = fork();
+	if(child3==0){
+		nice(3);
+		ASSERT_ZERO(make_rt_child_become_short(child3));
+		sched_yield();
+		exit(33);
+	}
+	// All short are ready to run, now I lower my prio and they run in order,
+	// then I get control back and check what happened while I was off
+	ASSERT_ZERO(make_me_other());
+	sched_yield();
+	// Here I am back after all shorts did run
+	return true;
+}
+
 static bool testSimpleShorts_BetterPrioRunsFirst(){
 	get_last_ctx_id(&last_short_obtained_ctx_id);
 	ASSERT_ZERO(make_me_rt());
@@ -151,6 +172,9 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 	free(log);
 	return true;
 }
+
+
+
 static bool testSimpleShorts_SamePrioRunInFIFO(){
 	get_last_ctx_id(&last_short_obtained_ctx_id);
 	ASSERT_ZERO(make_me_rt());
@@ -1707,57 +1731,57 @@ static bool testSetParam_UsedAsSetSchedulerWith_EveryPolicyIncludingSHORT_Should
 
 
 int main(void) {
-	RUN_TEST(testSimpleShorts_BetterPrioRunsFirst);
-	RUN_TEST(testSimpleShorts_SamePrioRunInFIFO);
-	RUN_TEST(testSimpleShorts_BestBecomesWorst_ImmediateSwitchAndRunInNewOrder);
-	RUN_TEST(testYieldingShorts_SingleBestYields_NoSwitch);
-	RUN_TEST(testYieldingShorts_OneOfBestsYields_GoesBackToEndOfHisPrio);
-	RUN_TEST(testForkingShorts_TwoProcs_ChildRunsFirst);
-	RUN_TEST(testForkingShorts_TwoProcs_ChildBecomesNicer_SwitchBackToParent);
-	RUN_TEST(testForkingShorts_MoreProcs_ChildRunsFirst_ParentRunsLastInPrio);
-	RUN_TEST(testWaitingShorts_BestWaits_ComesBackToFirst);
-	RUN_TEST(testSimpleOverdueShorts_ExecuteFIFO);
-	RUN_TEST(testForkingOverdueShorts_ParentRuns_ChildGoesToBackOfLine);
-	RUN_TEST(testWaitingOverdueShorts_GoesToBackOfLine);
-	RUN_TEST(testYieldingOverdueShorts_GoesToBackOfLine);
+	RUN_TEST(testSimpleShorts_superSimple);
+	// RUN_TEST(testSimpleShorts_SamePrioRunInFIFO);
+	// RUN_TEST(testSimpleShorts_BestBecomesWorst_ImmediateSwitchAndRunInNewOrder);
+	// RUN_TEST(testYieldingShorts_SingleBestYields_NoSwitch);
+	// RUN_TEST(testYieldingShorts_OneOfBestsYields_GoesBackToEndOfHisPrio);
+	// RUN_TEST(testForkingShorts_TwoProcs_ChildRunsFirst);
+	// RUN_TEST(testForkingShorts_TwoProcs_ChildBecomesNicer_SwitchBackToParent);
+	// RUN_TEST(testForkingShorts_MoreProcs_ChildRunsFirst_ParentRunsLastInPrio);
+	// RUN_TEST(testWaitingShorts_BestWaits_ComesBackToFirst);
+	// RUN_TEST(testSimpleOverdueShorts_ExecuteFIFO);
+	// RUN_TEST(testForkingOverdueShorts_ParentRuns_ChildGoesToBackOfLine);
+	// RUN_TEST(testWaitingOverdueShorts_GoesToBackOfLine);
+	// RUN_TEST(testYieldingOverdueShorts_GoesToBackOfLine);
 	
-	RUN_TEST(testIsShort_Invalid_OTHER);
-	RUN_TEST(testIsShort_Invalid_FIFO);
-	RUN_TEST(testIsShort_Invalid_RR);
-	RUN_TEST(testIsShort_Invalid_NotExistPID);
-	RUN_TEST(testIsShort_Invalid_NotLegalPID);
-	RUN_TEST(testIsShort_Valid_RegularShort);
-	RUN_TEST(testIsShort_Valid_RegularShortAfterFork);
-	RUN_TEST(testIsShort_Valid_OverdueShort);
+	// RUN_TEST(testIsShort_Invalid_OTHER);
+	// RUN_TEST(testIsShort_Invalid_FIFO);
+	// RUN_TEST(testIsShort_Invalid_RR);
+	// RUN_TEST(testIsShort_Invalid_NotExistPID);
+	// RUN_TEST(testIsShort_Invalid_NotLegalPID);
+	// RUN_TEST(testIsShort_Valid_RegularShort);
+	// RUN_TEST(testIsShort_Valid_RegularShortAfterFork);
+	// RUN_TEST(testIsShort_Valid_OverdueShort);
 	
-	RUN_TEST(testRemTime_Invalid_OTHER);
-	RUN_TEST(testRemTime_Invalid_FIFO);
-	RUN_TEST(testRemTime_Invalid_RR);
-	RUN_TEST(testRemTime_Invalid_NotExistPID);
-	RUN_TEST(testRemTime_Invalid_NotLegalPID);
+	// RUN_TEST(testRemTime_Invalid_OTHER);
+	// RUN_TEST(testRemTime_Invalid_FIFO);
+	// RUN_TEST(testRemTime_Invalid_RR);
+	// RUN_TEST(testRemTime_Invalid_NotExistPID);
+	// RUN_TEST(testRemTime_Invalid_NotLegalPID);
 	
-	RUN_TEST(testRemCooloff_Invalid_OTHER);
-	RUN_TEST(testRemCooloff_Invalid_FIFO);
-	RUN_TEST(testRemCooloff_Invalid_RR);
-	RUN_TEST(testRemCooloff_Invalid_NotExistPID);
-	RUN_TEST(testRemCooloff_Invalid_NotLegalPID);
-	RUN_TEST(testRemCooloff_Valid_ShortAfterFork_HalfNumber_OddOriginal);
-	RUN_TEST(testRemCooloff_Valid_ShortAfterFork_HalfNumber_EvenOriginal);
-	RUN_TEST(testRemCooloff_Valid_ShortAfterFork_HalfNumber_SingleOriginal);
-	RUN_TEST(testRemCooloff_Valid_ShortAfterFork_HalfNumber_ZeroOriginal);
-	RUN_TEST(testRemCooloff_Valid_Overdue_ShouldAlreadyBeLess);
-	RUN_TEST(testRemCooloff_Valid_OverdueAfterFork_HalfNumber);
-	RUN_TEST(testRemCooloff_Valid_OverdueForever_0);
+	// RUN_TEST(testRemCooloff_Invalid_OTHER);
+	// RUN_TEST(testRemCooloff_Invalid_FIFO);
+	// RUN_TEST(testRemCooloff_Invalid_RR);
+	// RUN_TEST(testRemCooloff_Invalid_NotExistPID);
+	// RUN_TEST(testRemCooloff_Invalid_NotLegalPID);
+	// RUN_TEST(testRemCooloff_Valid_ShortAfterFork_HalfNumber_OddOriginal);
+	// RUN_TEST(testRemCooloff_Valid_ShortAfterFork_HalfNumber_EvenOriginal);
+	// RUN_TEST(testRemCooloff_Valid_ShortAfterFork_HalfNumber_SingleOriginal);
+	// RUN_TEST(testRemCooloff_Valid_ShortAfterFork_HalfNumber_ZeroOriginal);
+	// RUN_TEST(testRemCooloff_Valid_Overdue_ShouldAlreadyBeLess);
+	// RUN_TEST(testRemCooloff_Valid_OverdueAfterFork_HalfNumber);
+	// RUN_TEST(testRemCooloff_Valid_OverdueForever_0);
 	
-	RUN_TEST(testGetParam_CooloffNotGoDown);
-	RUN_TEST(testSetParam_CooloffsNotChangingButReqTimeYes);
-	RUN_TEST(testSetParam_UsedAsSetSchedulerWith_Neg1_ShouldWork);
-	RUN_TEST(testSetParam_UsedAsSetSchedulerWith_OtherNegatives_ShouldFailOnPERM);
-	RUN_TEST(testSetParam_UsedAsSetSchedulerWith_EveryPolicyIncludingSHORT_ShouldFailOnPERM);
+	// RUN_TEST(testGetParam_CooloffNotGoDown);
+	// RUN_TEST(testSetParam_CooloffsNotChangingButReqTimeYes);
+	// RUN_TEST(testSetParam_UsedAsSetSchedulerWith_Neg1_ShouldWork);
+	// RUN_TEST(testSetParam_UsedAsSetSchedulerWith_OtherNegatives_ShouldFailOnPERM);
+	// RUN_TEST(testSetParam_UsedAsSetSchedulerWith_EveryPolicyIncludingSHORT_ShouldFailOnPERM);
 	
 	
-	//Valka stress test
-	RUN_TEST(test_fork_stress);
+	// //Valka stress test
+	// RUN_TEST(test_fork_stress);
 	return 0;
 }
 

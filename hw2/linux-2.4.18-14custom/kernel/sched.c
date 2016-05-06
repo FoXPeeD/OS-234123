@@ -301,7 +301,7 @@ static inline int effective_prio(task_t *p)
 	//#BENITZIK
 	if (p->policy == SCHED_SHORT)
 	{
-		return p->static_prio;
+		return (p->is_overdue) ? MAX_PRIO-1 : p->static_prio;
 	}
 
 	/*
@@ -527,6 +527,7 @@ void wake_up_forked_process(task_t * p)
 void sched_exit(task_t * p)
 {
 	//#BENITZIK: TODO: check what to do if the son (p) is SHORT
+	printk("(pid %d, policy=%d) is exiting\n", p->pid, p->policy);
 	if (current->policy == SCHED_SHORT)
 	{
 		return;
@@ -1419,6 +1420,13 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		retval = -EPERM;
 		goto out_unlock;
 	}
+	
+	//#BENITZIK
+	if (policy == SCHED_SHORT && p->policy != SCHED_OTHER) {
+		retval = -EPERM;
+		goto out_unlock;
+	}
+	
 	if (policy < 0)
 		policy = p->policy;
 	else {
@@ -1433,25 +1441,21 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	 * 1..MAX_USER_RT_PRIO-1, valid priority for SCHED_OTHER is 0.
 	 */
 	retval = -EINVAL;
-	if (lp.sched_priority < 0 || lp.sched_priority > MAX_USER_RT_PRIO-1)
+	if ((policy != SCHED_SHORT) && (lp.sched_priority < 0 || lp.sched_priority > MAX_USER_RT_PRIO-1))
 		goto out_unlock;
 	if ((policy == SCHED_OTHER) != (lp.sched_priority == 0))
 		goto out_unlock;
-	if (policy == SCHED_SHORT && p->policy != SCHED_SHORT)//#BENITZIK: validate parameters
-	{
+
+	//#BENITZIK - Validate params
+	if (policy == SCHED_SHORT) {
 		if(lp.requested_time <= 0 || lp.requested_time > 3000)
 			goto out_unlock;
-		if(lp.number_of_cooloffs < 0 || lp.number_of_cooloffs > 5)
-			goto out_unlock;
-		if (policy==SCHED_SHORT && p->policy != SCHED_OTHER)
-		{
-			retval = -EPERM;
-			goto out_unlock;
-		}
-	} else if (policy == SCHED_SHORT) {		//#BENITZIK: if arrived from set_param ignore number_of_cooloffs
-		if(lp.requested_time <= 0 || lp.requested_time > 3000)
+
+		if(!was_policy_negative
+				&& (lp.number_of_cooloffs < 0 || lp.number_of_cooloffs > 5))
 			goto out_unlock;
 	}
+
 
 	retval = -EPERM;
 	//#BENITZIK: TODO:handle permissions
@@ -1464,38 +1468,39 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 
 
 	//#BENITZIK
-	p->requested_time_ms = lp.requested_time;
-	p->next_requested_time = (lp.requested_time*HZ)/1000;
-	if (!p->next_requested_time)
-	{
-		p->next_requested_time = 1;
-	}
-	if (was_policy_negative){
-		retval = 0;
-		goto out_unlock;
-	}
-	else if (policy == SCHED_SHORT){
+	retval = 0;
+	if (policy == SCHED_SHORT) {
+
+		p->requested_time_ms = lp.requested_time;
+		p->next_requested_time = (lp.requested_time*HZ)/1000;
+		if (!p->next_requested_time)
+			p->next_requested_time = 1;
+		
+		if (was_policy_negative)		// We were just here to change requested_time
+			goto out_unlock;
+
+		// We are changing an OTHER to SHORT
+		deactivate_task(p, task_rq(p));
 		p->is_overdue = 0;
 		p->policy = SCHED_SHORT;
 		p->cooloffs_left = lp.number_of_cooloffs;
-		p->time_slice = (lp.requested_time*HZ)/1000;
-		p->requested_time = (lp.requested_time*HZ)/1000;
-		if (!p->next_requested_time)
-		{
-			p->next_requested_time = 1;
-			p->time_slice;
-		}
-		p->static_prio = effective_prio(p);
-		p->prio = effective_prio(p);
+		
+		p->requested_time = next_requested_time;
+		p->time_slice = next_requested_time;
+		
+		p->prio = p->static_prio;
 		p->requested_cooloffs = lp.number_of_cooloffs;
-		dequeue_task(p, p->array);
-		enqueue_task(p, rq->short_array);
-		p->array = rq->short_array;
+		
+		/* HWLOGGER */
+		{
+			set_last_needresched_reason(rq->curr, CTX_SETSCHEDULER);  /* hw2 ctx_log */
+			activate_task(p, task_rq(p));
+		}
+		/* HWLOGGEREND */	// IF HAD: activate_task(p, task_rq(p));
+		
 		set_need_resched();
-		retval = 0;
 		goto out_unlock;
 	}
-
 
 
 	array = p->array;
@@ -1509,7 +1514,6 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	else
 		p->prio = p->static_prio;
 	if (array)
-
 	/* HWLOGGER */
 	{
 		set_last_needresched_reason(rq->curr, CTX_SETSCHEDULER);  /* hw2 ctx_log */
@@ -2263,7 +2267,7 @@ int ll_copy_from_user(void *to, const void *from_user, unsigned long len)
 int sys_is_SHORT(int pid) {		//syscall #243
 
 	//check pid
-	if (pid <= 0)//if the pid is not valid or idle process status is asked
+	if (pid < 0)
 		return -EINVAL;
 
 	task_t *p = find_process_by_pid(pid);

@@ -2,8 +2,12 @@
 
 ./moveAll
 
-gcc TestimTestim.c -o rlogger
+#gcc TestimTestim.c -o rlogger
+#
+#./rlogger
 
-./rlogger
+gcc test.c -o t.o
+
+./t.o
 
 echo DONE RUNNING TESTS!
