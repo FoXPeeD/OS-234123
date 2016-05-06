@@ -1484,17 +1484,20 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 			goto out_unlock;
 
 		// We are changing an OTHER to SHORT
-		deactivate_task(p, task_rq(p));
+		array = p->array;
+		if (array)
+			deactivate_task(p, task_rq(p));
 		p->is_overdue = 0;
 		p->policy = SCHED_SHORT;
 		p->cooloffs_left = lp.number_of_cooloffs;
 		
-		p->requested_time = next_requested_time;
-		p->time_slice = next_requested_time;
+		p->requested_time = p->next_requested_time;
+		p->time_slice = p->next_requested_time;
 		
 		p->prio = p->static_prio;
 		p->requested_cooloffs = lp.number_of_cooloffs;
 		
+		if (array)
 		/* HWLOGGER */
 		{
 			set_last_needresched_reason(rq->curr, CTX_SETSCHEDULER);  /* hw2 ctx_log */
@@ -2345,7 +2348,7 @@ void print_sched_stats(task_t *p,int all,int only_short){
 		return;
 	}
 	runqueue_t *rq = this_rq();
-	int array_num;
+	int array_num = -1;
 	if (!p->array)
 		array_num = 4;
 	else if (p->array == rq->active)
@@ -2357,11 +2360,16 @@ void print_sched_stats(task_t *p,int all,int only_short){
 	else if (p->array == rq->overdue_array)
 		array_num = 3;
 
+	// probably redundant:
+	if (array_num == -1)
+		return;
+
 	char* array_str[5] = {"active\0","expired\0","short\0","Overdue\0","NULL\0"};
 	char* policy_str[6] = {"OTHER\0","FIFO\0","RR\0","3\0","4\0","SHORT\0"};
 	char* is_overdue_str[2] = {"(ragular)\0","-Overdue\0"};
 	printk("pid: %d, time_slice: %d\n, policy:%s%s, array: %s\n",
-		p->pid,p->time_slice,policy_str[p->policy],is_overdue_str[p->is_overdue],array_str[array_num]);
+		p->pid,p->time_slice,policy_str[p->policy],
+		is_overdue_str[p->is_overdue],array_str[array_num]);
 	if (p->policy == SCHED_SHORT && all)
 	{
 		printk("-> cooloffs_left: %d, requested_time: %d\n, next_requested_time:%d, requested_cooloffs: %d\n",
