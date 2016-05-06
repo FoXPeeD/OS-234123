@@ -860,7 +860,9 @@ void scheduler_tick(int user_tick, int system)
 		&& p->array != rq->short_array 
 		&& p->array != rq->overdue_array) {		//#BENITZIKroot
 
-		printk("In tick 6 (Expired but running!? Of %d, time_slice=%d, array!=NULL?=%d, array==expired?=%d).\n", 
+ 		print_sched_stats(p,0,1);
+
+		// printk("In tick 6 (Expired but running!? Of %d, time_slice=%d, array!=NULL?=%d, array==expired?=%d).\n", 
 			p->array->nr_active, p->time_slice, p->array==NULL, p->array==rq->expired);
 		/* HWLOGGER */
 		set_last_needresched_reason(p, CTX_SCHEDULER_TICK);
