@@ -2315,6 +2315,41 @@ int sys_remaining_cooloffs(int pid){//syscall #245
 }
 
 
+void print_sched_stats(task_t *p,int all){
+	
+	int array_num;
+	int overdue_flag = p->is_overdue;
+	if (!p->array)
+		array_num = 4;
+	else{
+		switch(p->array){
+		case p->rq->active:
+			array_num = 0;
+			break;
+		case p->rq->expired:
+			array_num = 1;
+			break;
+		case p->rq->short_array:
+			array_num = 2;
+			break;
+		case p->rq->overdue_array:
+			array_num = 3;
+			break;
+		}
+	}
+
+	char* array_str[5] = {"active\0","expired\0","short\0","Overdue\0","NULL\0"};
+	char* policy_str[6] = {"OTHER\0","FIFO\0","RR\0","3\0","4\0","SHORT\0"};
+	char* is_overdue_str[2] = {"(ragular)\0","-Overdue\0"}
+	printk("pid: %d, time_slice: %d\n, policy:%s%s, array: %s\n",
+		p->pid,p->time_slice,policy_str[p->policy],is_overdue_str[p->is_overdue],array_str[array_num])
+	if (p->policy == SCHED_SHORT && all)
+	{
+		printk("-> cooloffs_left: %d, requested_time: %d\n, next_requested_time:%d, requested_cooloffs: %d\n",
+		p->cooloffs_left,p->requested_time,p->next_requested_time,p->requested_cooloffs)
+	}
+}
+
 
 #ifdef CONFIG_LOLAT_SYSCTL
 struct low_latency_enable_struct __enable_lowlatency = { 0, };
