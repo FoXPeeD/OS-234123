@@ -1048,6 +1048,8 @@ static inline int need_resched(void)
 	return unlikely(current->need_resched);
 }
 
+void print_sched_stats(task_t *p,int all, int only_short);//BENITZIK
+
 #endif /* __KERNEL__ */
 
 #endif

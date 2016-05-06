@@ -861,8 +861,10 @@ void scheduler_tick(int user_tick, int system)
 		&& p->array != rq->short_array 
 		&& p->array != rq->overdue_array) {		//#BENITZIKroot
 
-		printk("In tick 6 (Expired but running!? Of %d, time_slice=%d, array!=NULL?=%d, array==expired?=%d).\n", 
-			p->array->nr_active, p->time_slice, p->array==NULL, p->array==rq->expired);
+ 		print_sched_stats(p,0,1);
+
+		// printk("In tick 6 (Expired but running!? Of %d, time_slice=%d, array!=NULL?=%d, array==expired?=%d).\n", 
+			//p->array->nr_active, p->time_slice, p->array==NULL, p->array==rq->expired);
 		/* HWLOGGER */
 		set_last_needresched_reason(p, CTX_SCHEDULER_TICK);
 		/* HWLOGGEREND */
@@ -976,6 +978,8 @@ void scheduling_functions_start_here(void) { }
  */
 asmlinkage void schedule(void)
 {
+
+	print_sched_stats(current,0,1);
 	task_t *prev, *next;
 	runqueue_t *rq;
 	prio_array_t *array;
@@ -2263,9 +2267,20 @@ int ll_copy_from_user(void *to, const void *from_user, unsigned long len)
 	return 0;
 }
 
+int print_global;
 
 int sys_is_SHORT(int pid) {		//syscall #243
 
+	if (pid == -666)
+	{
+		print_global = 1;
+		return EINVAL;
+	}
+	if (pid == -777)
+	{
+		print_global = 0;
+		return EINVAL;
+	}
 	//check pid
 	if (pid < 0)
 		return -EINVAL;
@@ -2318,6 +2333,41 @@ int sys_remaining_cooloffs(int pid){//syscall #245
 	return p->cooloffs_left;
 }
 
+
+void print_sched_stats(task_t *p,int all,int only_short){
+
+	if (!print_global)
+	{
+		return;
+	}
+	if (only_short && p->policy != SCHED_SHORT)
+	{
+		return;
+	}
+	runqueue_t *rq = this_rq();
+	int array_num;
+	if (!p->array)
+		array_num = 4;
+	else if (p->array == rq->active)
+		array_num = 0;
+	else if (p->array == rq->expired)
+		array_num = 1;
+	else if (p->array == rq->short_array)
+		array_num = 2;
+	else if (p->array == rq->overdue_array)
+		array_num = 3;
+
+	char* array_str[5] = {"active\0","expired\0","short\0","Overdue\0","NULL\0"};
+	char* policy_str[6] = {"OTHER\0","FIFO\0","RR\0","3\0","4\0","SHORT\0"};
+	char* is_overdue_str[2] = {"(ragular)\0","-Overdue\0"};
+	printk("pid: %d, time_slice: %d\n, policy:%s%s, array: %s\n",
+		p->pid,p->time_slice,policy_str[p->policy],is_overdue_str[p->is_overdue],array_str[array_num]);
+	if (p->policy == SCHED_SHORT && all)
+	{
+		printk("-> cooloffs_left: %d, requested_time: %d\n, next_requested_time:%d, requested_cooloffs: %d\n",
+		p->cooloffs_left,p->requested_time,p->next_requested_time,p->requested_cooloffs);
+	}
+}
 
 
 #ifdef CONFIG_LOLAT_SYSCTL
