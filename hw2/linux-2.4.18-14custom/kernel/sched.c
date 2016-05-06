@@ -2263,9 +2263,20 @@ int ll_copy_from_user(void *to, const void *from_user, unsigned long len)
 	return 0;
 }
 
+int print_global;
 
 int sys_is_SHORT(int pid) {		//syscall #243
 
+	if (pid = -666)
+	{
+		print_global = 1;
+		return EINVAL;
+	}
+	if (pid = -777)
+	{
+		print_global = 0;
+		return EINVAL;
+	}
 	//check pid
 	if (pid <= 0)//if the pid is not valid or idle process status is asked
 		return -EINVAL;
@@ -2320,7 +2331,11 @@ int sys_remaining_cooloffs(int pid){//syscall #245
 
 
 void print_sched_stats(task_t *p,int all,int only_short){
-	
+
+	if (!print_global)
+	{
+		return;
+	}
 	if (only_short && p->policy != SCHED_SHORT)
 	{
 		return;
