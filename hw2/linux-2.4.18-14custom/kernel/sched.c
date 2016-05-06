@@ -863,7 +863,7 @@ void scheduler_tick(int user_tick, int system)
  		print_sched_stats(p,0,1);
 
 		// printk("In tick 6 (Expired but running!? Of %d, time_slice=%d, array!=NULL?=%d, array==expired?=%d).\n", 
-			p->array->nr_active, p->time_slice, p->array==NULL, p->array==rq->expired);
+			//p->array->nr_active, p->time_slice, p->array==NULL, p->array==rq->expired);
 		/* HWLOGGER */
 		set_last_needresched_reason(p, CTX_SCHEDULER_TICK);
 		/* HWLOGGEREND */
@@ -1471,9 +1471,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	p->requested_time_ms = lp.requested_time;
 	p->next_requested_time = (lp.requested_time*HZ)/1000;
 	if (!p->next_requested_time)
-	{
 		p->next_requested_time = 1;
-	}
 	if (was_policy_negative){
 		retval = 0;
 		goto out_unlock;
@@ -1484,10 +1482,10 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		p->cooloffs_left = lp.number_of_cooloffs;
 		p->time_slice = (lp.requested_time*HZ)/1000;
 		p->requested_time = (lp.requested_time*HZ)/1000;
-		if (!p->next_requested_time)
+		if (!p->time_slice)//if time_slice = 0 give at least 1
 		{
 			p->next_requested_time = 1;
-			p->time_slice;
+			p->time_slice = 1;
 		}
 		p->static_prio = effective_prio(p);
 		p->prio = effective_prio(p);
@@ -2267,12 +2265,12 @@ int print_global;
 
 int sys_is_SHORT(int pid) {		//syscall #243
 
-	if (pid = -666)
+	if (pid == -666)
 	{
 		print_global = 1;
 		return EINVAL;
 	}
-	if (pid = -777)
+	if (pid == -777)
 	{
 		print_global = 0;
 		return EINVAL;
@@ -2340,26 +2338,18 @@ void print_sched_stats(task_t *p,int all,int only_short){
 	{
 		return;
 	}
+	runqueue_t *rq = this_rq();
 	int array_num;
-	int overdue_flag = p->is_overdue;
 	if (!p->array)
 		array_num = 4;
-	else{
-		switch(p->array){
-		case p->rq->active:
-			array_num = 0;
-			break;
-		case p->rq->expired:
-			array_num = 1;
-			break;
-		case p->rq->short_array:
-			array_num = 2;
-			break;
-		case p->rq->overdue_array:
-			array_num = 3;
-			break;
-		}
-	}
+	else if (p->array == rq->active)
+		array_num = 0;
+	else if (p->array == rq->expired)
+		array_num = 1;
+	else if (p->array == rq->short_array)
+		array_num = 2;
+	else if (p->array == rq->overdue_array)
+		array_num = 3;
 
 	char* array_str[5] = {"active\0","expired\0","short\0","Overdue\0","NULL\0"};
 	char* policy_str[6] = {"OTHER\0","FIFO\0","RR\0","3\0","4\0","SHORT\0"};
