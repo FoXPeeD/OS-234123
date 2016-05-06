@@ -20,13 +20,13 @@
 \cp linux-2.4.18-14custom/kernel/exit.c					/usr/src/linux-2.4.18-14custom/kernel/
 \cp linux-2.4.18-14custom/kernel/kassert.h					/usr/src/linux-2.4.18-14custom/kernel/
 
-\cp -a tests/test_logger_src/user_mode/.			/root/
+\cp -a -u tests/test_logger_src/user_mode/.			/root/
 \cp hw2_syscalls.h							/root/
 \cp runTest									/root/
 
 # Simple El-Ad Test
 \cp -a -u tests/test_simple/.							/root/
-\cp simpleTest								/root/
+\cp tests/simpleTest								/root/
 
 
 # Anna's friend's Test7

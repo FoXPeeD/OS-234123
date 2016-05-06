@@ -527,7 +527,7 @@ void wake_up_forked_process(task_t * p)
 void sched_exit(task_t * p)
 {
 	//#BENITZIK: TODO: check what to do if the son (p) is SHORT
-	printk("(pid %d, policy=%d) is exiting\n", p->pid, p->policy);
+	//printk("(pid %d, policy=%d) is exiting\n", p->pid, p->policy);
 	if (current->policy == SCHED_SHORT)
 	{
 		return;
@@ -838,7 +838,7 @@ void scheduler_tick(int user_tick, int system)
 	runqueue_t *rq = this_rq();
 	task_t *p = current;
 
-	if (p->policy == SCHED_SHORT){
+	if (p->policy == SCHED_SHORT) {
 		printk("%d, overdue=%d\n", p->time_slice, p->is_overdue);
 	}
 
@@ -861,7 +861,7 @@ void scheduler_tick(int user_tick, int system)
 		&& p->array != rq->short_array 
 		&& p->array != rq->overdue_array) {		//#BENITZIKroot
 
- 		print_sched_stats(p,0,1);
+ 		print_sched_stats(p,0,1,"tick.expired(!)");
 
 		// printk("In tick 6 (Expired but running!? Of %d, time_slice=%d, array!=NULL?=%d, array==expired?=%d).\n", 
 			//p->array->nr_active, p->time_slice, p->array==NULL, p->array==rq->expired);
@@ -979,7 +979,7 @@ void scheduling_functions_start_here(void) { }
 asmlinkage void schedule(void)
 {
 
-	print_sched_stats(current,0,1);
+	print_sched_stats(current,0,1, "schedule.start");
 	task_t *prev, *next;
 	runqueue_t *rq;
 	prio_array_t *array;
@@ -1030,7 +1030,6 @@ pick_next_task:
 		queue = array->queue + idx;
 		next = list_entry(queue->next, task_t, run_list);
 		if (next->policy != SCHED_OTHER) {	// == REALTIME
-			printk("Run a REALTIME (pid=%d, %d).\n", next->pid, array->nr_active);
 			goto switch_tasks;
 		}
 	}
@@ -1041,7 +1040,6 @@ pick_next_task:
 		idx = sched_find_first_bit(array->bitmap);
 		queue = array->queue + idx;
 		next = list_entry(queue->next, task_t, run_list);
-		printk("Run a SHORT (pid=%d, of %d).\n", next->pid, array->nr_active);
 		goto switch_tasks;
 	}
 
@@ -1051,7 +1049,6 @@ pick_next_task:
 		idx = sched_find_first_bit(array->bitmap);
 		queue = array->queue + idx;
 		next = list_entry(queue->next, task_t, run_list);
-		printk("Running OVERDUE-SHORT (pid=%d, of %d).\n", next->pid, rq->overdue_array->nr_active);
 		goto switch_tasks;
 	}
 
@@ -1061,7 +1058,7 @@ pick_next_task:
 		/*
 		 * Switch the active and expired arrays.
 		 */
-		printk("Returning all %d OTHERS to Active.\n", rq->expired->nr_active);
+		//printk("Returning all %d OTHERS to Active.\n", rq->expired->nr_active);
 		rq->active = rq->expired;
 		rq->expired = array;
 		array = rq->active;
@@ -1084,7 +1081,15 @@ switch_tasks:
 	if (likely(prev != next)) {
 		rq->nr_switches++;
 		rq->curr = next;
-	
+
+		//#BENITZIK
+		if (next->policy == SCHED_SHORT && next->is_overdue)
+			printk("Running an OVERDUE-SHORT (pid=%d, of %d).\n", next->pid, rq->overdue_array->nr_active);
+		else if (next->policy == SCHED_SHORT)
+			printk("Running a SHORT (pid=%d, of %d).\n", next->pid, rq->short_array->nr_active);
+		else if (next->policy != SCHED_OTHER)
+			printk("Running a REALTIME (pid=%d, of %d).\n", next->pid, rq->active->nr_active);
+
 		prepare_arch_switch(rq);
 		prev = context_switch(prev, next);
 		barrier();
@@ -2337,7 +2342,8 @@ int sys_remaining_cooloffs(int pid){//syscall #245
 }
 
 
-void print_sched_stats(task_t *p,int all,int only_short){
+//#BENITZIK
+void print_sched_stats(task_t *p,int all,int only_short, char *from_where){
 
 	if (!print_global)
 	{
@@ -2364,10 +2370,11 @@ void print_sched_stats(task_t *p,int all,int only_short){
 	if (array_num == -1)
 		return;
 
-	char* array_str[5] = {"active\0","expired\0","short\0","Overdue\0","NULL\0"};
-	char* policy_str[6] = {"OTHER\0","FIFO\0","RR\0","3\0","4\0","SHORT\0"};
-	char* is_overdue_str[2] = {"(ragular)\0","-Overdue\0"};
-	printk("pid: %d, time_slice: %d\n, policy:%s%s, array: %s\n",
+	char* array_str[5] = {"active","expired","short","Overdue","NULL"};
+	char* policy_str[6] = {"OTHER","FIFO","RR","3","4","SHORT"};
+	char* is_overdue_str[2] = {"(regular)","-Overdue"};
+	printk("In %s, pid: %d, time_slice: %d\n, policy:%s%s, array: %s\n",
+		from_where,
 		p->pid,p->time_slice,policy_str[p->policy],
 		is_overdue_str[p->is_overdue],array_str[array_num]);
 	if (p->policy == SCHED_SHORT && all)
