@@ -919,7 +919,7 @@ void scheduler_tick(int user_tick, int system)
 			p->first_time_slice = 0;
 			p->prio = MAX_PRIO - 1;
 			p->cooloffs_left--;
-			set_tsk_need_resched(p);
+			// set_tsk_need_resched(p);
 			enqueue_task(p, rq->overdue_array);
 		}
 		else if (p->is_overdue && p->cooloffs_left >= 0) {
@@ -931,12 +931,13 @@ void scheduler_tick(int user_tick, int system)
 			p->requested_time = p->next_requested_time;
 			p->first_time_slice = 0;
 			p->prio = p->static_prio;
-			set_tsk_need_resched(p);
+			// set_tsk_need_resched(p);
 			enqueue_task(p, rq->short_array);
 		}
 		// It is overdue, so continue until exit or replaced by another process.
 		else
 			printk("%d is overdue, but there's nother better to do.\n", p->pid);
+		set_tsk_need_resched(p);
 		goto out;
 	}
 
