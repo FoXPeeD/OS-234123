@@ -19,7 +19,7 @@ struct sched_param_ex {
 };
 
 void busywait(int ms)
-{
+{/*
     struct timespec tstart, tend;
     long int runtime;
 
@@ -30,7 +30,9 @@ void busywait(int ms)
         if(runtime >= ms) {
             return;
         }
-    }
+    }*/
+    int i = 200*ms;
+    while(--i > 0);
 }
 
 bool getSetParamTest() {

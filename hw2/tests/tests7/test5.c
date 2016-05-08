@@ -17,8 +17,8 @@ struct sched_param_ex {
     int num_cooloff;
 };
 
-void busywait(int ms)
-{
+void busyWait(int ms)
+{/*
     struct timespec tstart, tend;
     long int runtime;
 
@@ -29,7 +29,20 @@ void busywait(int ms)
         if(runtime >= ms) {
             return;
         }
-    }
+    }*/
+    int i = 200*ms;
+    while(--i > 0);
+}
+#define CLOCKS_PER_SEC	100	/* frequency at which times() counts */
+#define MS_BETWEEN_CLOCKS(c1,c2) (((double) ((c2) - (c1))) / (CLOCKS_PER_SEC/1000))
+static void busywait(int delay_milliseconds){
+	clock_t start,end;
+	start = clock();
+	end = clock();
+	while (MS_BETWEEN_CLOCKS(start,end) < delay_milliseconds)
+	{
+		end = clock();
+	}
 }
 
 // THE OUTPUT NEEDS TO BE: 1 2 3 4 5 6 7
