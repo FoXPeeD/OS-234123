@@ -211,12 +211,24 @@ ctx_log_record_t* find_next_rec_non_sched_other_after_specific(ctx_log_record_t 
 ctx_log_record_t* find_next_rec_short(ctx_log_record_t rec[], int nr_records) {
     int i;
     for (i = 0; i < nr_records; ++i) {
-        if (rec[i].next_info.policy == SCHED_SHORT && rec[i].reason != CTX_DO_FORK) {
+        if (rec[i].next_info.policy == SCHED_SHORT) {
             return (rec+i);
         }
     }
     return NULL;
 }
+
+// UNCHECKED
+void printLogs(ctx_log_record_t rec[], int nr_records) {
+    int i;
+    for (i = 0; i < nr_records; ++i) {
+        if (rec[i].next_info.policy != SCHED_OTHER)
+            printf("%d->%d,\t", rec[i].reason, rec[i].next_info.pid);
+    }
+    printf("\n");
+    return;
+}
+
 
 // UNCHECKED
 ctx_log_record_t* find_next_rec_short_after_specific(ctx_log_record_t rec[], int nr_records,ctx_log_record_t* specific) {	

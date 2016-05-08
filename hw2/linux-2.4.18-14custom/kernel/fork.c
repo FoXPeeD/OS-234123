@@ -653,10 +653,6 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	p->swappable = 0;
 	p->state = TASK_UNINTERRUPTIBLE;
 
-	/* HWLOGGER */
-	p->last_needresched_reason = CTX_DEFAULT;
-	/* HWLOGGEREND */
-
 	copy_flags(clone_flags, p);
 	p->pid = get_pid(clone_flags);
 	if (p->pid == 0 && current->pid != 0)

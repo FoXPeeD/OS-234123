@@ -24,9 +24,6 @@
 extern void sem_exit (void);
 extern struct task_struct *child_reaper;
 
-/* HWLOGGER */
-extern void set_last_needresched_reason(task_t* p, ctx_reason_t reason);
-/* HWLOGGEREND */
 
 int getrusage(struct task_struct *, int, struct rusage *);
 
@@ -532,10 +529,6 @@ fake_volatile:
 
 	tsk->exit_code = code;
 	exit_notify();
-	
-	/* HWLOGGER */
-	set_last_needresched_reason(current, CTX_DO_EXIT);
-	/* HWLOGGEREND */
 
 	schedule();
 	BUG();
@@ -656,10 +649,6 @@ repeat:
 		retval = -ERESTARTSYS;
 		if (signal_pending(current))
 			goto end_wait4;
-
-		/* HWLOGGER */
-		set_last_needresched_reason(current, CTX_WAIT4);
-		/* HWLOGGEREND */
 
 		schedule();
 		goto repeat;

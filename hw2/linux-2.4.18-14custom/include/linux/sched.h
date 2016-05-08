@@ -121,31 +121,6 @@ extern unsigned long nr_uninterruptible(void);
 #define SCHED_RR		2
 #define SCHED_SHORT		5	//#BENITZIK
 
-/* HWLOGGER */
-typedef enum ctx_reason {
-    CTX_DEFAULT,
-    CTX_SCHEDULER_TICK, 
-    CTX_SET_USER_NICE, 
-    CTX_TRY_TO_WAKE_UP,
-    CTX_DO_FORK, 
-    CTX_YIELD, 
-    CTX_SLEEP_ON, 
-    CTX_SETSCHEDULER, 
-    CTX_DO_EXIT, /*(AT EXIT FILE)*/
-    CTX_WAIT4, /*(AT EXIT FILE)*/
-    CTX_KICK_IF_RUNNING,
-    CTX_SCHEDULER_LOOP,
-    CTX_LOAD_BALANCE,
-    CTX_CPU_IDLE,
-    CTX_SCHEDULE_TIMEOUT
-} ctx_reason_t;
-
-#define FTRACE_SYMBOL_STR_MAX_SIZE 40
-typedef struct func_call_trace_info {
-    unsigned long addr, stack;
-    char symbol[FTRACE_SYMBOL_STR_MAX_SIZE];
-} func_call_trace_info_t;
-/* HWLOGGEREND */
 
 //#BENITZIK
 // We use this when requesting to change process from OTHER to SHORT
@@ -492,10 +467,6 @@ struct task_struct {
 	int requested_cooloffs;
 	int insert_at_front;
 
-	/* HWLOGGER */
-    ctx_reason_t last_needresched_reason;
-    int last_needresched_info;
-	/* HWLOGGEREND */
 };
 
 /*
@@ -601,11 +572,8 @@ extern struct exec_domain	default_exec_domain;
     blocked:		{{0}},						\
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
-    last_needresched_reason:        CTX_DEFAULT, \
-    last_needresched_info:      0, \
 }
-/* HWLOGGER - I must delete the 2 lines last_needresched_reason, last_needresched_info*/
-/* HWLOGGEREND */
+
 
 #ifndef INIT_TASK_SIZE
 # define INIT_TASK_SIZE	2048*sizeof(long)
