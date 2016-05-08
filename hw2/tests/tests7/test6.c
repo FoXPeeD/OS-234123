@@ -47,6 +47,7 @@ bool niceTest() {
 	sp.num_cooloff = 3;
 	sched_setscheduler(getpid(), SCHED_SHORT, (struct sched_param *)&sp); //father becomes a SHORT
 	pid = fork();
+	printf("***%d***",sched_getscheduler(getpid()));
 	if(pid != 0) {
 		printf("2\n"); //son is worse so father should run now
 		nice(4); //father makes himself worse than son
@@ -62,7 +63,9 @@ bool niceTest() {
 	}
 	else {
         // Child, a SHORT.
-        while(sched_getscheduler(getpid()) != SCHED_SHORT) {}
+        while(sched_getscheduler(getpid()) != SCHED_SHORT) {
+        	//printf("%d",sched_getscheduler(getpid()));
+        }
 		printf("1\n"); //after SHORT forks child should run first
 		nice(2); //son makes himself worse than father
 		printf("3\n"); //father is worse so son should run now

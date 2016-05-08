@@ -78,7 +78,7 @@ bool RtVsShortAndOverdue() {
         // Child, a SHORT.
         while(sched_getscheduler(getpid()) != SCHED_SHORT) {}
 		printf("3\n"); 
-		busywait(20); // son is still regular SHORT but father should wake up by now and take his place 
+		busywait(200); // son is still regular SHORT but father should wake up by now and take his place 
 		printf("5\n");
 		busywait(140); // son becomes overdue by now and father should wake up and take his place
 		printf("7\n");
