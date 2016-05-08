@@ -30,7 +30,7 @@ void busywait(int ms)
             return;
         }
     }*/
-    int i = 200*ns;
+    int i = 200*ms;
     while(--i > 0);
 }
 
@@ -76,4 +76,5 @@ int main() {
 	printf("shortVsBetterShort output:\n");
 	shortVsBetterShort();
 	return 0;
-}	
+}
+	

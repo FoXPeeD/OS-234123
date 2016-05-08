@@ -30,7 +30,7 @@ void busywait(int ms)
             return;
         }
     }*/
-    int i = 200*ns;
+    int i = 200*ms;
     while(--i > 0);
 }
 
@@ -83,4 +83,5 @@ int main() {
 	printf("otherVsShortAndOverdue output:\n");
 	otherVsShortAndOverdue();
 	return 0;
-}	
+}
+	
