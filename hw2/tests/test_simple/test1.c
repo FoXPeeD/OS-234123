@@ -64,29 +64,21 @@ int test1() {
         mypid = getpid();
 		printf("mypid (son) = %d\n",mypid);
         ASSERT_POSITIVE(mypid);
-        printf("Log #1\n");
         nice(1); // be nicer than child
         ASSERT_ZERO(sched_setscheduler(mypid, SCHED_SHORT, &params));
-        printf("Log #2\n");
         ASSERT_EQUALS(sched_setscheduler(mypid, SCHED_SHORT, &params), -1);
-        printf("Log #3\n");
         ASSERT_EQUALS(errno, EPERM);
         ASSERT_EQUALS(is_SHORT(mypid), 1);
-        printf("Log #4\n");
         
         smem->arr[smem->curr] = FATHER+0; // init value
         //return 0;
         ASSERT_ZERO(sched_setscheduler(child, SCHED_SHORT, &params)); // now we lost control until child will be overdue
-        printf("Log #5\n");
         
         // child got into overdue. we gained control again. we should still be short here.
         smem->arr[++smem->curr] = FATHER+1;
         while (is_SHORT(mypid)) ;
-        printf("Log #6\n");
         smem->arr[++smem->curr] = FATHER+(1*10)+OVERDUE_PERIOD; // got into first overdue period
-        printf("Log #7\n");
         ASSERT_EQUALS(remaining_cooloffs(mypid), cooloffs-1);
-        printf("Log #8\n");
 
         for (i = 1; i <= cooloffs; ++i) {
             while (!is_SHORT(mypid)) ;

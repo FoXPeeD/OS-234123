@@ -109,7 +109,7 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_short(child3));
 		// busyWait(20);
-		sched_yield();
+		// sched_yield();
 		exit(33);
 	}
 	pid_t child2 = fork();
@@ -117,7 +117,7 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child2));
 		// busyWait(20);
-		sched_yield();
+		// sched_yield();
 		exit(22);
 	}
 	
@@ -126,7 +126,7 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_short(child1));
 		// busyWait(20);
-		sched_yield();
+		// sched_yield();
 		exit(11);
 	}
 	
@@ -134,34 +134,45 @@ static bool testSimpleShorts_BetterPrioRunsFirst(){
 	// then I get control back and check what happened while I was off
 	ASSERT_ZERO(make_me_other());
 	sched_yield();
+	busyWait(2000);
 	// Here I am back after all shorts did run
 	ctx_log_record_t *log = malloc(sizeof(ctx_log_record_t)*LOG_SIZE);
     ASSERT(log);
 	int log_actual_size = get_ctx_log(log,LOG_SIZE);
     WRITE_LOG_TO_FILE(log, log_actual_size); // to see run `showlog <testname>.log`
     ASSERT(verify_ctx_log(log,log_actual_size)); // TODO: activate [remove remark].
+	
+	
 	ctx_log_record_t* first_short = find_next_rec_short(log,log_actual_size);
     ASSERT(first_short);
 	req_find_next_rec_short_after_specific(second_short,log,log_actual_size,first_short);
 	req_find_next_rec_short_after_specific(third_short,log,log_actual_size,second_short);
-	req_find_next_rec_short_after_specific(r4_short,log,log_actual_size,third_short);
-	req_find_next_rec_short_after_specific(r5_short,log,log_actual_size,r4_short);
-	req_find_next_rec_short_after_specific(r6_short,log,log_actual_size,r5_short);
+	// req_find_next_rec_short_after_specific(r4_short,log,log_actual_size,third_short);
+	// req_find_next_rec_short_after_specific(r5_short,log,log_actual_size,r4_short);
+	// req_find_next_rec_short_after_specific(r6_short,log,log_actual_size,r5_short);
 	
-	printf("\nchild1=%d, child2=%d, child3=%d\n", child1, child2, child3);
-	printf("r1=%d %d, r2=%d %d, r3=%d %d, r4=%d %d, r5=%d %d, r6=%d %d\n",
-		(first_short->next_info).pid,(first_short->reason),
-		(second_short->next_info).pid, (second_short->reason),
-		(third_short->next_info).pid,(third_short->reason),
-		(r4_short->next_info).pid,(r4_short->reason),
-		(r5_short->next_info).pid,(r5_short->reason),
-		(r6_short->next_info).pid,(r6_short->reason));
+	// // printLogs(log,log_actual_size);
+    int i;
+    for (i = 0; i < log_actual_size; ++i) {
+        if (log[i].next_info.policy == SCHED_SHORT && log[i].reason != 3)
+            printf("%d->%d,\t", log[i].reason, log[i].next_info.pid);
+    }
+
+	// printf("\nchild1=%d, child2=%d, child3=%d\n", child1, child2, child3);
+	// printf("r1=%d %d, r2=%d %d, r3=%d %d, r4=%d %d, r5=%d %d, r6=%d %d\n",
+	// 	(first_short->next_info).pid,(first_short->reason),
+	// 	(second_short->next_info).pid, (second_short->reason),
+	// 	(third_short->next_info).pid,(third_short->reason),
+	// 	(r4_short->next_info).pid,(r4_short->reason),
+	// 	(r5_short->next_info).pid,(r5_short->reason),
+	// 	(r6_short->next_info).pid,(r6_short->reason));
 	ASSERT_EQUALS((first_short->next_info).pid,child1);
 	ASSERT_EQUALS((second_short->prev_info).pid,child1);
 	ASSERT_EQUALS((second_short->next_info).pid,child2);
 	ASSERT_EQUALS((third_short->prev_info).pid,child2);
 	ASSERT_EQUALS((third_short->next_info).pid,child3);
 	// TODO :: Add more and more ASSERT_* for every relevant piece of data in the log
+
 	free(log);
 	return true;
 }
@@ -177,35 +188,35 @@ static bool testSimpleShorts_SamePrioRunInFIFO(){
 	if(child5==0){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_short(child5));
-		sched_yield();
+		// sched_yield();
 		exit(55);
 	}
 	pid_t child2 = fork();
 	if(child2==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child2));
-		sched_yield();
+		// sched_yield();
 		exit(22);
 	}
 	pid_t child3 = fork();
 	if(child3==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child3));
-		sched_yield();
+		// sched_yield();
 		exit(33);
 	}
 	pid_t child4 = fork();
 	if(child4==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child4));
-		sched_yield();
+		// sched_yield();
 		exit(44);
 	}
 	pid_t child1 = fork();
 	if(child1==0){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_short(child1));
-		sched_yield();
+		// sched_yield();
 		exit(11);
 	}
 	// All short are ready to run, now I lower my prio and they run in order,
@@ -248,14 +259,14 @@ static bool testSimpleShorts_BestBecomesWorst_ImmediateSwitchAndRunInNewOrder(){
 	if(child3==0){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_short(child3));
-		sched_yield();
+		// sched_yield();
 		exit(33);
 	}
 	pid_t child2 = fork();
 	if(child2==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child2));
-		sched_yield();
+		// sched_yield();
 		exit(22);
 	}
 	
@@ -263,7 +274,7 @@ static bool testSimpleShorts_BestBecomesWorst_ImmediateSwitchAndRunInNewOrder(){
 	if(child1==0){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_short(child1));
-		sched_yield();
+		// sched_yield();
 		nice(5);
 		exit(11);
 	}
@@ -308,14 +319,14 @@ static bool testWaitingShorts_BestWaits_ComesBackToFirst(){
 	if(child3==0){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_short(child3));
-		sched_yield();
+		// sched_yield();
 		exit(33);
 	}
 	pid_t child2 = fork();
 	if(child2==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child2));
-		sched_yield();
+		// sched_yield();
 		//busyWait(1000); // we first run when child1 waits, we want to keep running when it comes  back so it can cut us off.
         complete_debug_work(); // we should expect to loss control here to child1.
         busyWait(20);
@@ -326,7 +337,7 @@ static bool testWaitingShorts_BestWaits_ComesBackToFirst(){
 	if(child1==0){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_short(child1));
-		sched_yield();
+		// sched_yield();
 		// went to yield as RT, came back as short. we run first of all the shorts
 		
 		// Doesn't work for some reason (seems not even going to wait), checking with raw log....
@@ -352,6 +363,16 @@ static bool testWaitingShorts_BestWaits_ComesBackToFirst(){
 	req_find_next_rec_short_after_specific(third_short,log,log_actual_size,second_short);
 	req_find_next_rec_short_after_specific(fourth_short,log,log_actual_size,third_short);
 	req_find_next_rec_short_after_specific(fifth_short,log,log_actual_size,fourth_short);
+
+
+    int i;
+    for (i = 0; i < log_actual_size; ++i) {
+        if (log[i].next_info.policy == SCHED_SHORT && log[i].reason != 3)
+            printf("%d->%d,\t", log[i].reason, log[i].next_info.pid);
+    }
+
+	printf("\nchild1=%d, child2=%d, child3=%d\n", child1, child2, child3);
+
 
 	ASSERT_EQUALS((first_short->next_info).pid,child1);
 	ASSERT_EQUALS((second_short->prev_info).pid,child1);
@@ -527,7 +548,7 @@ static bool testForkingShorts_TwoProcs_ChildRunsFirst(){
 	pid_t child = father+1; // stupid to do... might fail...
 	if(father==0){
 		ASSERT_ZERO(make_rt_child_become_short(father));
-		sched_yield();
+		// sched_yield();
 		fork();
 		exit(55);
 	}
@@ -613,14 +634,14 @@ static bool testForkingShorts_MoreProcs_ChildRunsFirst_ParentRunsLastInPrio(){
 	if(child5==0){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_short(child5));
-		sched_yield();
+		// sched_yield();
 		exit(55);
 	}
 	pid_t child2 = fork();
 	if(child2==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child2));
-		sched_yield(); // yielding as RT, coming back as SHORT
+		// sched_yield(); // yielding as RT, coming back as SHORT
 		pid_t child_of_2 = fork();
 		if(child_of_2==0){
 			exit(22);
@@ -631,21 +652,21 @@ static bool testForkingShorts_MoreProcs_ChildRunsFirst_ParentRunsLastInPrio(){
 	if(child3==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child3));
-		sched_yield();
+		// sched_yield();
 		exit(33);
 	}
 	pid_t child4 = fork();
 	if(child4==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_short(child4));
-		sched_yield();
+		// sched_yield();
 		exit(44);
 	}
 	pid_t child1 = fork();
 	if(child1==0){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_short(child1));
-		sched_yield();
+		// sched_yield();
 		exit(11);
 	}
 	// All short are ready to run, now I lower my prio and they run in order,
@@ -698,7 +719,7 @@ static bool testSimpleOverdueShorts_ExecuteFIFO(){
 	if(child3==0){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_super_short(child3));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		exit(33);
 	}
@@ -706,7 +727,7 @@ static bool testSimpleOverdueShorts_ExecuteFIFO(){
 	if(child2==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_super_short(child2));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		exit(22);
 	}
@@ -715,7 +736,7 @@ static bool testSimpleOverdueShorts_ExecuteFIFO(){
 	if(child1==0){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_super_short(child1));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		exit(11);
 	}
@@ -815,7 +836,7 @@ static bool testWaitingOverdueShorts_GoesToBackOfLine(){
 	if(child3==0){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_super_short(child3));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		exit(33);
 	}
@@ -823,7 +844,7 @@ static bool testWaitingOverdueShorts_GoesToBackOfLine(){
 	if(child2==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_super_short(child2));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		exit(22);
 	}
@@ -832,7 +853,7 @@ static bool testWaitingOverdueShorts_GoesToBackOfLine(){
 	if(child1==0){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_super_short(child1));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		usleep(50*1000);
 		exit(11);
@@ -920,7 +941,7 @@ static bool testForkingOverdueShorts_ParentRuns_ChildGoesToBackOfLine(){
 	if(child3==0){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_super_short(child3));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		exit(33);
 	}
@@ -928,7 +949,7 @@ static bool testForkingOverdueShorts_ParentRuns_ChildGoesToBackOfLine(){
 	if(child2==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_super_short(child2));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		exit(22);
 	}
@@ -937,7 +958,7 @@ static bool testForkingOverdueShorts_ParentRuns_ChildGoesToBackOfLine(){
 	if(child1==0){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_super_short(child1));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		fork(); // TODO :: Use shared memory to return pid of child
 		busyWait(100);
@@ -1030,7 +1051,7 @@ static bool testYieldingOverdueShorts_GoesToBackOfLine(){
 	if(child3==0){
 		nice(3);
 		ASSERT_ZERO(make_rt_child_become_super_short(child3));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		exit(33);
 	}
@@ -1038,7 +1059,7 @@ static bool testYieldingOverdueShorts_GoesToBackOfLine(){
 	if(child2==0){
 		nice(2);
 		ASSERT_ZERO(make_rt_child_become_super_short(child2));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		exit(22);
 	}
@@ -1047,7 +1068,7 @@ static bool testYieldingOverdueShorts_GoesToBackOfLine(){
 	if(child1==0){
 		nice(1);
 		ASSERT_ZERO(make_rt_child_become_super_short(child1));
-		sched_yield();
+		// sched_yield();
 		busyWait(1000);
 		sched_yield();
 		exit(11);
@@ -1724,7 +1745,7 @@ static bool testSetParam_UsedAsSetSchedulerWith_EveryPolicyIncludingSHORT_Should
 
 
 int main(void) {
-	RUN_TEST(testSimpleShorts_BetterPrioRunsFirst);
+	// RUN_TEST(testSimpleShorts_BetterPrioRunsFirst);
 	// RUN_TEST(testSimpleShorts_SamePrioRunInFIFO);
 	// RUN_TEST(testSimpleShorts_BestBecomesWorst_ImmediateSwitchAndRunInNewOrder);
 	// RUN_TEST(testYieldingShorts_SingleBestYields_NoSwitch);
@@ -1732,7 +1753,7 @@ int main(void) {
 	// RUN_TEST(testForkingShorts_TwoProcs_ChildRunsFirst);
 	// RUN_TEST(testForkingShorts_TwoProcs_ChildBecomesNicer_SwitchBackToParent);
 	// RUN_TEST(testForkingShorts_MoreProcs_ChildRunsFirst_ParentRunsLastInPrio);
-	// RUN_TEST(testWaitingShorts_BestWaits_ComesBackToFirst);
+	RUN_TEST(testWaitingShorts_BestWaits_ComesBackToFirst);
 	// RUN_TEST(testSimpleOverdueShorts_ExecuteFIFO);
 	// RUN_TEST(testForkingOverdueShorts_ParentRuns_ChildGoesToBackOfLine);
 	// RUN_TEST(testWaitingOverdueShorts_GoesToBackOfLine);
