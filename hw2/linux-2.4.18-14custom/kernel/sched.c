@@ -458,6 +458,8 @@ repeat_lock_task:
 		/*
 		 * If sync is set, a resched_task() is a NOOP
 		 */
+		print_sched_stats(current,0,0, "try_to_wake_up-curr");
+		print_sched_stats(p,0,0, "try_to_wake_up-p");
 		if (p->prio < rq->curr->prio)
 		
 
@@ -977,7 +979,7 @@ void scheduling_functions_start_here(void) { }
 asmlinkage void schedule(void)
 {
 
-	print_sched_stats(current,0,1, "schedule.start");
+	print_sched_stats(current,0,0, "schedule.start");
 	task_t *prev, *next;
 	runqueue_t *rq;
 	prio_array_t *array;
@@ -2370,10 +2372,10 @@ void print_sched_stats(task_t *p,int all,int only_short, char *from_where){
 	char* array_str[5] = {"active","expired","short","Overdue","NULL"};
 	char* policy_str[6] = {"OTHER","FIFO","RR","3","4","SHORT"};
 	char* is_overdue_str[2] = {"(regular)","-Overdue"};
-	printk("In %s, pid: %d, time_slice: %d\n, policy:%s%s, array: %s\n",
+	printk("In %s, pid: %d, time_slice: %d\n, policy:%s%s, array: %s\n, prio:%d",
 		from_where,
 		p->pid,p->time_slice,policy_str[p->policy],
-		is_overdue_str[p->is_overdue],array_str[array_num]);
+		is_overdue_str[p->is_overdue],array_str[array_num],p->prio);
 	if (p->policy == SCHED_SHORT && all)
 	{
 		printk("-> cooloffs_left: %d, requested_time: %d\n, next_requested_time:%d, requested_cooloffs: %d\n",
