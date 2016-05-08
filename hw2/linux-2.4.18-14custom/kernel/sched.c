@@ -1746,11 +1746,11 @@ asmlinkage long sys_sched_yield(void)
 	__set_bit(i, array->bitmap);
 
 out_unlock:
-	spin_unlock(&rq->lock);
-
 	/* HWLOGGER */
 	set_last_needresched_reason(current, CTX_YIELD);  /* hw2 ctx_log */
 	/* HWLOGGEREND */
+
+	spin_unlock(&rq->lock);
 
 	schedule();
 

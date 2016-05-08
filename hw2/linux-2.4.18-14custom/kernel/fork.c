@@ -737,6 +737,9 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	if (!current->time_slice)
 		BUG();
 	
+	//#BENITZIK
+	p->policy = current->policy;
+
 	if (current->policy != SCHED_SHORT)
 	{
 		p->is_overdue = 0;
@@ -747,12 +750,17 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		p->requested_cooloffs = 0;
 		p->insert_at_front = 0;
 	}
-
-	//#BENITZIK
-	if (current->policy == SCHED_SHORT) {
+	else {
 		p->cooloffs_left = (current->cooloffs_left + 1) >> 1;
 		current->cooloffs_left >>= 1;
 		p->is_overdue = current->is_overdue;
+		p->policy = current->policy;
+
+		// Explicit copy, just in case.
+		p->requested_time = current->requested_time;
+		p->next_requested_time = current->next_requested_time;
+		p->requested_time_ms = current->requested_time_ms;
+		p->insert_at_front = current->insert_at_front;
 	}
 
 	//#BENITZIK If its an overdue short, each process should have the same, full cooloff [stored in "time_slice"].
