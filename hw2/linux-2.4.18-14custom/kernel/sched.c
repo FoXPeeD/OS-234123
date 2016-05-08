@@ -458,9 +458,10 @@ repeat_lock_task:
 		/*
 		 * If sync is set, a resched_task() is a NOOP
 		 */
+		 //#BENITZIK
 		print_sched_stats(current,0,0, "try_to_wake_up-curr");
 		print_sched_stats(p,0,0, "try_to_wake_up-p");
-		if (p->prio < rq->curr->prio)
+		if (p->prio < rq->curr->prio || p->policy == SCHED_SHORT || current->policy == SCHED_SHORT)
 		
 
 		/* HWLOGGER */
@@ -776,7 +777,8 @@ skip_queue:
 	next->cpu = this_cpu;
 	this_rq->nr_running++;
 	enqueue_task(next, this_rq->active);
-	if (next->prio < current->prio)
+	//#BENITZIK
+	if (next->prio < current->prio || p->policy == SCHED_SHORT || next->policy == SCHED_SHORT)
 		set_need_resched();
 	if (!idle && --imbalance) {
 		if (curr != head)
@@ -2372,7 +2374,7 @@ void print_sched_stats(task_t *p,int all,int only_short, char *from_where){
 	char* array_str[5] = {"active","expired","short","Overdue","NULL"};
 	char* policy_str[6] = {"OTHER","FIFO","RR","3","4","SHORT"};
 	char* is_overdue_str[2] = {"(regular)","-Overdue"};
-	printk("In %s, pid: %d, time_slice: %d\n, policy:%s%s, array: %s\n, prio:%d",
+	printk("In %s, pid: %d, time_slice: %d\n, policy:%s%s, array: %s, prio:%d\n",
 		from_where,
 		p->pid,p->time_slice,policy_str[p->policy],
 		is_overdue_str[p->is_overdue],array_str[array_num],p->prio);

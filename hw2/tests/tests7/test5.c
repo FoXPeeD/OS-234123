@@ -54,6 +54,9 @@ bool RtVsShortAndOverdue() {
 	pid = fork();
 	if(pid != 0) {
 		// Parent: makes child a SHORT and father a FIFO (RT priority)
+		printf("son:%d ",pid);
+		printf("parent:%d\n",getpid());
+		is_SHORT(-666);
 		sp.sched_priority = 20;
         sp.requested_time = 0;
         sp.num_cooloff = 0;
@@ -69,6 +72,7 @@ bool RtVsShortAndOverdue() {
 		usleep(120000); //father sleeps for 120ms, son should take his place 
 		printf("6\n");
 		usleep(50000); //father sleeps for 50ms so son should take his place
+		is_SHORT(-777);
 	}
 	else {
         // Child, a SHORT.
