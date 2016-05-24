@@ -28,7 +28,8 @@ void LL_getRangeFrom2(int y) {
 	}
 
 	Node current = first;
-	for (int i = 3; i < y; i++) {
+	int i;
+	for (i = 3; i < y; i++) {
 		Node next = (Node) malloc(sizeof(Node*));
 		if (!next) {
 			LL_free();
