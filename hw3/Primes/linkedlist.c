@@ -12,8 +12,9 @@ void LL_getRangeFrom2(int y) {
 	head = NULL;
 	if (y < 2)
 		return;
-	node first = (node)malloc(sizeof(node*));
-	if (!first)
+
+	Node current = (Node)malloc(sizeof(Node*));
+	if (!current)
 		return;
 	head = first;
 	first->num = 2;
@@ -44,19 +45,25 @@ void LL_getRangeFrom2(int y) {
 
 
 // Return the head (safe)
-node LL_head() {
-
+Node LL_head() {
+	//TODO: Acquire lock for *head
+	return *head;
 }
 
 
 // Return the node after the specified one (safe)
-node LL_next(node current) {
+Node LL_next(Node current) {
+	if (!current)
+		return NULL;
 
+	acquire(current->next);
+	release(current->prev);
+	return current->next;
 }
 
 
 // Delete node from LL and return the node after it (safe)
-node LL_remove(node current) {
+Node LL_remove(Node current) {
 
 }
 
@@ -65,5 +72,20 @@ node LL_remove(node current) {
 void LL_destory() {
 
 }
+
+
+void acquire(Node current) {
+	if (!current)
+		return;
+
+	// TODO: Acquire the lock
+}
+
+void release(Node current) {
+	if (!current)
+		return;
+	// TODO: Release the lock
+}
+
 
 
