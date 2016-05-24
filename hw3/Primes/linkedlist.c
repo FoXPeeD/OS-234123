@@ -15,15 +15,30 @@ void LL_getRangeFrom2(int y) {
 	node first = (node)malloc(sizeof(node*));
 	if (!first)
 		return;
+	head = first;
 	first->num = 2;
 	first->prev = NULL;
 	first->next = NULL;
-	//TODO: first->lock = init_lock();
-
-	for (int i = 2; i < y; i++) {
-		first->num = 2;
-		first->prev = NULL;
-		first->next = NULL;
+	if(pthread_mutex_init( &(first->mutex), NULL ))
+		free(first);
+		return;
+	node prev = first;
+	for (int i = 3; i < y; i++) {
+		node curr = (node)malloc(sizeof(node*));
+		if (!curr)
+			LL_destory();
+			return;
+		curr->num = i;
+		curr->prev = NULL;
+		curr->next = NULL;
+		if(pthread_mutex_init( &(first->mutex), NULL )){
+			free(curr);
+			LL_destory();
+			return;
+		}
+		prev->next = curr;
+		curr->prev = prev;
+		prev = curr;
 	}
 }
 
