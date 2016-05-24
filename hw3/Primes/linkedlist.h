@@ -16,7 +16,7 @@ struct node_t {
 	int num;
 	struct node_t *prev;
 	struct node_t *next;
-	pthread_mutex_t *mutex;
+	pthread_mutex_t mutex;
 };
 
 typedef struct node_t* Node;

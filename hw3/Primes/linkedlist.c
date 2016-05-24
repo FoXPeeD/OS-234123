@@ -22,7 +22,7 @@ void LL_getRangeFrom2(int y) {
 	first->prev = NULL;
 	first->next = NULL;
 
-	if (pthread_mutex_init(first->mutex, NULL)) {
+	if (pthread_mutex_init(&(first->mutex), NULL)) {
 		free(first);
 		return;
 	}
@@ -39,7 +39,7 @@ void LL_getRangeFrom2(int y) {
 		next->prev = current;
 		next->next = NULL;
 
-		if (pthread_mutex_init(first->mutex, NULL)) {
+		if (pthread_mutex_init(&(next->mutex), NULL)) {
 			free(next);
 			LL_free();
 			return;
@@ -93,16 +93,15 @@ void LL_free() {
 		current = LL_remove(current);
 }
 
-void acquire(Node current) {
+int acquire(Node current) {
 	if (!current)
-		return;
-
-	// TODO: Acquire the lock
+		return EINVAL;
+	return pthread_mutex_lock(&(current->mutex));
 }
 
-void release(Node current) {
+int release(Node current) {
 	if (!current)
-		return;
-	// TODO: Release the lock
+		return EINVAL;
+	return pthread_mutex_unlock(&(current->mutex));
 }
 
