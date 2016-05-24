@@ -399,9 +399,8 @@ repeat_lock_task:
 		/*
 		 * If sync is set, a resched_task() is a NOOP
 		 */
-		print_sched_stats(current,0,0, "try_to_wake_up-curr");
-		print_sched_stats(p,0,0, "try_to_wake_up-p");
-		if (p->prio < rq->curr->prio)
+		 //#BENITZIK
+		if (p->prio < rq->curr->prio || p->policy == SCHED_SHORT || current->policy == SCHED_SHORT)
 			resched_task(rq->curr);
 
 		success = 1;
@@ -705,7 +704,8 @@ skip_queue:
 	next->cpu = this_cpu;
 	this_rq->nr_running++;
 	enqueue_task(next, this_rq->active);
-	if (next->prio < current->prio)
+	//#BENITZIK
+	if (next->prio < current->prio || p->policy == SCHED_SHORT || next->policy == SCHED_SHORT)
 		set_need_resched();
 	if (!idle && --imbalance) {
 		if (curr != head)
@@ -769,10 +769,6 @@ void scheduler_tick(int user_tick, int system)
 	runqueue_t *rq = this_rq();
 	task_t *p = current;
 
-	if (p->policy == SCHED_SHORT) {
-		printk("%d: %d, overdue=%d\n", p->pid, p->time_slice, p->is_overdue);
-	}
-
 	if (p == rq->idle) {
 		if (local_bh_count(cpu) || local_irq_count(cpu) > 1)
 			kstat.per_cpu_system[cpu] += system;
@@ -791,12 +787,6 @@ void scheduler_tick(int user_tick, int system)
 	if (p->array != rq->active
 		&& p->array != rq->short_array 
 		&& p->array != rq->overdue_array) {		//#BENITZIKroot
-
- 		print_sched_stats(p,0,1,"tick.expired(!)");
-
-		// printk("In tick 6 (Expired but running!? Of %d, time_slice=%d, array!=NULL?=%d, array==expired?=%d).\n", 
-			//p->array->nr_active, p->time_slice, p->array==NULL, p->array==rq->expired);
-
 
 		set_tsk_need_resched(p);
 		return;
@@ -833,9 +823,8 @@ void scheduler_tick(int user_tick, int system)
 
 	//#BENITZIK - If overdue and time_slice is done: if it has cooloff cycles remaining, revive it. Otherwise, keep running.
 	if (p->policy == SCHED_SHORT && p->time_slice <= 1) {
-		printk("%d's time_slice has just expired.\n", p->pid);
+
 		if (!p->is_overdue) {
-			printk("%d's Time slice expired, now moving it to overdue_array.\n", p->pid);
 			// SHORT's timeslice is up, downgrade to SHORT_OVERDUE.
 			dequeue_task(p, rq->short_array);
 			p->is_overdue = 1;
@@ -848,7 +837,6 @@ void scheduler_tick(int user_tick, int system)
 			enqueue_task(p, rq->overdue_array);
 		}
 		else if (p->is_overdue && p->cooloffs_left >= 0) {
-			printk("%d's cooloff expired, now reviving it.\n", p->pid);
 			// Cooloff period is over, so revive as SHORT process.
 			dequeue_task(p, rq->overdue_array);
 			p->is_overdue = 0;
@@ -861,7 +849,6 @@ void scheduler_tick(int user_tick, int system)
 		}
 		// It is overdue, so continue until exit or replaced by another process.
 		else
-			printk("%d is overdue, but there's nother better to do.\n", p->pid);
 		set_tsk_need_resched(p);
 		goto out;
 	}
@@ -897,7 +884,6 @@ void scheduling_functions_start_here(void) { }
 asmlinkage void schedule(void)
 {
 
-	print_sched_stats(current,0,0, "schedule.start");
 	task_t *prev, *next;
 	runqueue_t *rq;
 	prio_array_t *array;
@@ -995,14 +981,6 @@ switch_tasks:
 	if (likely(prev != next)) {
 		rq->nr_switches++;
 		rq->curr = next;
-
-		//#BENITZIK
-		if (next->policy == SCHED_SHORT && next->is_overdue)
-			printk("Running an OVERDUE-SHORT (pid=%d, of %d).\n", next->pid, rq->overdue_array->nr_active);
-		else if (next->policy == SCHED_SHORT)
-			printk("Running a SHORT (pid=%d, of %d).\n", next->pid, rq->short_array->nr_active);
-		else if (next->policy != SCHED_OTHER)
-			printk("Running a REALTIME (pid=%d, of %d).\n", next->pid, rq->active->nr_active);
 
 		prepare_arch_switch(rq);
 		prev = context_switch(prev, next);
@@ -1359,7 +1337,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	retval = -EINVAL;
 	if ((policy != SCHED_SHORT) && (lp.sched_priority < 0 || lp.sched_priority > MAX_USER_RT_PRIO-1))
 		goto out_unlock;
-	if ((policy == SCHED_OTHER) != (lp.sched_priority == 0))
+	if ((policy == SCHED_OTHER) && (lp.sched_priority != 0))
 		goto out_unlock;
 
 	//#BENITZIK - Validate params
@@ -1396,9 +1374,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 			goto out_unlock;
 
 		// We are changing an OTHER to SHORT
-		array = p->array;
-		if (array)
-			deactivate_task(p, task_rq(p));
+
 		p->is_overdue = 0;
 		p->policy = SCHED_SHORT;
 		p->cooloffs_left = lp.number_of_cooloffs;
@@ -1408,6 +1384,11 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 		
 		p->prio = p->static_prio;
 		p->requested_cooloffs = lp.number_of_cooloffs;
+
+		array = p->array;
+		if (array)
+			deactivate_task(p, task_rq(p));
+
 		
 		if (array)
 			activate_task(p, task_rq(p));
@@ -2166,16 +2147,6 @@ int print_global;
 
 int sys_is_SHORT(int pid) {		//syscall #243
 
-	if (pid == -666)
-	{
-		print_global = 1;
-		return EINVAL;
-	}
-	if (pid == -777)
-	{
-		print_global = 0;
-		return EINVAL;
-	}
 	//check pid
 	if (pid < 0)
 		return -EINVAL;
@@ -2228,48 +2199,6 @@ int sys_remaining_cooloffs(int pid){//syscall #245
 	return p->cooloffs_left;
 }
 
-
-//#BENITZIK
-void print_sched_stats(task_t *p,int all,int only_short, char *from_where){
-
-	if (!print_global)
-	{
-		return;
-	}
-	if (only_short && p->policy != SCHED_SHORT)
-	{
-		return;
-	}
-	runqueue_t *rq = this_rq();
-	int array_num = -1;
-	if (!p->array)
-		array_num = 4;
-	else if (p->array == rq->active)
-		array_num = 0;
-	else if (p->array == rq->expired)
-		array_num = 1;
-	else if (p->array == rq->short_array)
-		array_num = 2;
-	else if (p->array == rq->overdue_array)
-		array_num = 3;
-
-	// probably redundant:
-	if (array_num == -1)
-		return;
-
-	char* array_str[5] = {"active","expired","short","Overdue","NULL"};
-	char* policy_str[6] = {"OTHER","FIFO","RR","3","4","SHORT"};
-	char* is_overdue_str[2] = {"(regular)","-Overdue"};
-	printk("In %s, pid: %d, time_slice: %d\n, policy:%s%s, array: %s\n, prio:%d",
-		from_where,
-		p->pid,p->time_slice,policy_str[p->policy],
-		is_overdue_str[p->is_overdue],array_str[array_num],p->prio);
-	if (p->policy == SCHED_SHORT && all)
-	{
-		printk("-> cooloffs_left: %d, requested_time: %d\n, next_requested_time:%d, requested_cooloffs: %d\n",
-		p->cooloffs_left,p->requested_time,p->next_requested_time,p->requested_cooloffs);
-	}
-}
 
 
 #ifdef CONFIG_LOLAT_SYSCTL
