@@ -38,6 +38,7 @@ Node LL_remove(Node current);
 // Destructor
 void LL_free();
 
-
+int acquire(Node current);
+int release(Node current);
 
 #endif /* LINKEDLIST_H_ */
