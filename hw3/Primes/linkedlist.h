@@ -8,8 +8,8 @@
 #ifndef LINKEDLIST_H_
 #define LINKEDLIST_H_
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 
 struct node_t {

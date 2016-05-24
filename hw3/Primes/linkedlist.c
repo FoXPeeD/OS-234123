@@ -13,8 +13,8 @@ void LL_getRangeFrom2(int y) {
 	if (y < 2)
 		return;
 
-	Node current = (Node)malloc(sizeof(Node*));
-	if (!current)
+	Node first = (Node)malloc(sizeof(Node*));
+	if (!first)
 		return;
 	head = first;
 	first->num = 2;
@@ -23,9 +23,9 @@ void LL_getRangeFrom2(int y) {
 	if(pthread_mutex_init( &(first->mutex), NULL ))
 		free(first);
 		return;
-	node prev = first;
+	Node prev = first;
 	for (int i = 3; i < y; i++) {
-		node curr = (node)malloc(sizeof(node*));
+		Node curr = (Node)malloc(sizeof(Node*));
 		if (!curr)
 			LL_destory();
 			return;
@@ -51,7 +51,7 @@ Node LL_head() {
 }
 
 
-// Return the node after the specified one (safe)
+// Return the Node after the specified one (safe)
 Node LL_next(Node current) {
 	if (!current)
 		return NULL;
@@ -62,7 +62,7 @@ Node LL_next(Node current) {
 }
 
 
-// Delete node from LL and return the node after it (safe)
+// Delete Node from LL and return the Node after it (safe)
 Node LL_remove(Node current) {
 
 }
