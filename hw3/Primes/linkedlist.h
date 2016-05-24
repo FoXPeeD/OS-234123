@@ -36,9 +36,7 @@ Node LL_next(Node current);
 Node LL_remove(Node current);
 
 // Destructor
-void LL_destory();
-
-
+void LL_free();
 
 
 
