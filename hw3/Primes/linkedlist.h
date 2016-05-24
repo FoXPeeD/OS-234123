@@ -10,12 +10,13 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include <pthread.h>
 
 struct node_t {
 	int num;
 	struct node_t *prev;
 	struct node_t *next;
-	// lock lock;
+	pthread_mutex_t *mutex;
 };
 
 typedef struct node_t* node;
