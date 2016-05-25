@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	// Init
+	// Init - test
 	LL_getRangeFrom2(N);
 
 	int i;
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 	Node p2 = NULL;
 	Node p = findCandidate(LL_head(), &p2);
 	while (p) {
-		printf("Found %d\n", p->num);
+		printf("Found %d. ", p->num);
 		release(LL_remove(p2));		// release p2 + 1
 		Node next = LL_next(p);
 		release(p);
