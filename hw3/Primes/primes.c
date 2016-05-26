@@ -40,17 +40,17 @@ Node handleCandidate(Node p) {
 			p2 = LL_next(p2);
 	}
 
+
+	// Reached the end of the list
 	int res;
 	if (p2) {
 		res = release(p2->prev);		// TODO: What should i do with the result?
 		res = release(p2);		// TODO: What should i do with the result?
 	}
 
-	// Reached the end of the list
 	res = acquire(p->prev);		// TODO: What should i do with the result?
 	res = acquire(p);		// TODO: What should i do with the result?
-	p = LL_next(p);
-	return p;
+	return LL_next(p);
 }
 
 
@@ -86,11 +86,8 @@ int main(int argc, char **argv) {
 	}
 
 	Node p = handleCandidate(LL_head());
-	LL_free();
 
-	return 0;
-
-	printf("Next prime to deal with is %d.\n", p? p->num : 0);
+//	printf("Next prime to deal with is %d.\n", p? p->num : 0);
 	while (p) {
 		printf("Found prime %d.\n", p->num);
 		Node p = handleCandidate(p);

@@ -13,7 +13,7 @@ void LL_getRangeFrom2(int y) {
 	if (y < 2)
 		return;
 
-	Node first = (Node) malloc(sizeof(Node*));
+	Node first = (Node) malloc(sizeof(struct node_t));
 	if (!first)
 		return;
 
@@ -29,8 +29,8 @@ void LL_getRangeFrom2(int y) {
 
 	Node current = first;
 	int i;
-	for (i = 3; i < y; i++) {
-		Node next = (Node) malloc(sizeof(Node*));
+	for (i = 3; i <= y; i++) {
+		Node next = (Node) malloc(sizeof(struct node_t));
 		if (!next) {
 			LL_free();
 			return;
@@ -63,7 +63,10 @@ Node LL_next(Node current) {
 		return NULL;
 
 	acquire(current->next);
+	if (!current->next)
+		release(current);
 	release(current->prev);
+
 	return current->next;
 }
 
@@ -76,12 +79,18 @@ Node LL_remove(Node current) {
 		acquire(current->next);
 		current->next->prev = current->prev;
 	}
+	else {
+		release(current->prev);
+		release(current);
+	}
 
-	current->prev->next = current->next;
+	if (current->prev)
+		current->prev->next = current->next;
+
 	Node next = current->next;
 
 	release(current);
-	free(current);
+//	free(current);
 
 	return next;
 }
