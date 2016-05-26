@@ -17,23 +17,24 @@
 
 
 // Gets node p, deletes all of its multiples (stops if p^2 is missing), and returns the next p
-Node handleCandidate(Node p) {
+Node handleCandidate(Node p, FILE* f) {
 	if (!p)
 		return NULL;
 
-	printf("Found prime %d.\n", p->num);
 
 	Node p2 = LL_next(p);
 	int isFirstThread = 0;
 	while (p2 && (isFirstThread || p2->num <= p->num * p->num)) {
 //		printf("Looking at %d (for %d)\n", p2->num, p->num);
 
-		if (p2->num == p->num * p->num)
+		if (p2->num == p->num * p->num) {
 			isFirstThread = 1;
+			fprintf(f, "Found prime %d.\n", p->num);
+		}
 
 		// Delete if needed, move on either way.
 		if (p2->num % p->num == 0) {
-			printf("Deleting %d\n", p2->num);
+			fprintf(f, "%d\n", p2->num);
 			p2 = LL_remove(p2);
 		}
 		else
@@ -54,13 +55,13 @@ Node handleCandidate(Node p) {
 }
 
 
-void printLog() {
-	;
-}
-
 int main(int argc, char **argv) {
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
+
+	pthread_mutex_t total_threads_lock;
+	pthread_mutex_init(&(total_threads_lock), NULL);
+	int total_threads = 1;
 
 	if (argc != 3) {
 		printf("Y u no give 2 arguments??\n");
@@ -78,23 +79,55 @@ int main(int argc, char **argv) {
 	// Init
 	LL_getRangeFrom2(N);
 
-	int i;
-	for (i = 1; i < T; i++) {
-		pid_t pid = fork();
-		if (pid == 0)
-			break;
+	FILE *f = fopen("thread-1.log", "w");
+	if (f == NULL)
+	{
+	    printf("Error opening file!\n");
+	    return 1;
 	}
 
-	Node p = handleCandidate(LL_head());
+	int i;
+	pid_t pid;
+	for (i = 2; i < T; i++) {
+		pid = fork();
+		if (pid == 0) {
+			char* fname;
+			sprintf(fname, "thread-%d.log", i);
+			f = fopen(fname, "w");
+			if (f == NULL)
+			{
+			    printf("Error opening file!\n");
+			    return 1;
+			}
+			break;
+		}
+	}
 
-//	printf("Next prime to deal with is %d.\n", p? p->num : 0);
+
+	Node p = handleCandidate(LL_head(), f);
+
 	while (p && p->num * p->num <= N)
-		p = handleCandidate(p);
+		p = handleCandidate(p, f);
 
-	wait(NULL);
-	printLog();
+	fclose(f);
+
+	if (!pid)		// If is a son
+	{
+		return 0;
+	}
+
+	f = fopen("primes.log", "w");
+	if (f == NULL)
+	{
+	    printf("Error opening file!\n");
+	    return 1;
+	}
+
+
+	LL_logAll(f);
+
 	LL_free();
 
-	return 1;
+	return 0;
 }
 
