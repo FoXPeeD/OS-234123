@@ -21,6 +21,8 @@ Node handleCandidate(Node p) {
 	if (!p)
 		return NULL;
 
+	printf("About to handle %d", p->num);
+
 	Node p2 = LL_next(p);
 	int isFirstThread = 0;
 	while (p2 && (isFirstThread || p2->num <= p->num * p->num)) {
@@ -38,8 +40,11 @@ Node handleCandidate(Node p) {
 			p2 = LL_next(p2);
 	}
 
-	int res = release(p2->prev);		// TODO: What should i do with the result?
-	res = release(p2);		// TODO: What should i do with the result?
+	int res;
+	if (p2) {
+		res = release(p2->prev);		// TODO: What should i do with the result?
+		res = release(p2);		// TODO: What should i do with the result?
+	}
 
 	// Reached the end of the list
 	res = acquire(p->prev);		// TODO: What should i do with the result?
@@ -81,6 +86,11 @@ int main(int argc, char **argv) {
 	}
 
 	Node p = handleCandidate(LL_head());
+	LL_free();
+
+	return 0;
+
+	printf("Next prime to deal with is %d.\n", p? p->num : 0);
 	while (p) {
 		printf("Found prime %d.\n", p->num);
 		Node p = handleCandidate(p);
