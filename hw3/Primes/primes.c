@@ -16,36 +16,43 @@
 #endif
 
 
-Node findCandidate(Node p, Node* pp2) {
-	Node p2 = *pp2;
-	p2 = LL_next(p);
-	while (p2) {
-		printf("Looking at %d (for %d)", p2->num, p->num);
-		*pp2 = p2;
+// Gets node p, deletes all of its multiples (stops if p^2 is missing), and returns the next p
+Node handleCandidate(Node p) {
+	if (!p)
+		return NULL;
+
+	Node p2 = LL_next(p);
+	int isFirstThread = 0;
+	while (p2 && (isFirstThread || p2->num <= p->num * p->num)) {
+		printf("Looking at %d (for %d)\n", p2->num, p->num);
+
 		if (p2->num == p->num * p->num)
-			return p;
+			isFirstThread = 1;
 
-		p2 = LL_next(p2);
-	}
-	return NULL;
-}
-
-void deleteMultiples(Node current, int num) {
-	while (current) {
-		if (current->num % num == 0) {
-			printf("Deleting %d\n", current->num);
-			current = LL_remove(current);
+		// Delete if needed, move on either way.
+		if (p2->num % p->num == 0) {
+			printf("Deleting %d\n", p2->num);
+			p2 = LL_remove(p2);
 		}
 		else
-			current = LL_next(current);
+			p2 = LL_next(p2);
 	}
+
+	// Reached the end of the list
+	int res = acquire(p);		// TODO: What should i do with the result?
+	p = LL_next(p);
+	return p;
 }
+
 
 void printLog() {
 	;
 }
 
 int main(int argc, char **argv) {
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
+
 	if (argc != 3) {
 		printf("Y u no give 2 arguments??\n");
 		return -1;
@@ -55,11 +62,11 @@ int main(int argc, char **argv) {
 	int T = atoi(argv[2]);
 
 	if (N < 2 || T < 1) {
-		printf("Invalid arguments");
+		printf("Invalid arguments\n");
 		return -1;
 	}
 
-	// Init - test
+	// Init
 	LL_getRangeFrom2(N);
 
 	int i;
@@ -68,15 +75,11 @@ int main(int argc, char **argv) {
 		if (pid == 0)
 			break;
 	}
-	printf("Here\n");
-	Node p2 = NULL;
-	Node p = findCandidate(LL_head(), &p2);
+
+	Node p = handleCandidate(LL_head());
 	while (p) {
-		printf("Found %d. ", p->num);
-		release(LL_remove(p2));		// release p2 + 1
-		Node next = LL_next(p);
-		release(p);
-		deleteMultiples(next, p->num);
+		printf("Found prime %d.\n", p->num);
+		Node p = handleCandidate(p);
 	}
 
 	wait(NULL);

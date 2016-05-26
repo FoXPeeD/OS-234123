@@ -86,3 +86,6 @@ version.ini
 .cproject
 .project
 kernel.s
+/hw3/.metadata
+/hw3/RemoteSystemsTempFiles
+/hw3/Primes/Debug
