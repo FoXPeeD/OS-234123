@@ -38,8 +38,12 @@ Node handleCandidate(Node p) {
 			p2 = LL_next(p2);
 	}
 
+	int res = release(p2->prev);		// TODO: What should i do with the result?
+	res = release(p2);		// TODO: What should i do with the result?
+
 	// Reached the end of the list
-	int res = acquire(p);		// TODO: What should i do with the result?
+	res = acquire(p->prev);		// TODO: What should i do with the result?
+	res = acquire(p);		// TODO: What should i do with the result?
 	p = LL_next(p);
 	return p;
 }
