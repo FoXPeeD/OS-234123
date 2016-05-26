@@ -21,12 +21,12 @@ Node handleCandidate(Node p) {
 	if (!p)
 		return NULL;
 
-	printf("About to handle %d", p->num);
+	printf("Found prime %d.\n", p->num);
 
 	Node p2 = LL_next(p);
 	int isFirstThread = 0;
 	while (p2 && (isFirstThread || p2->num <= p->num * p->num)) {
-		printf("Looking at %d (for %d)\n", p2->num, p->num);
+//		printf("Looking at %d (for %d)\n", p2->num, p->num);
 
 		if (p2->num == p->num * p->num)
 			isFirstThread = 1;
@@ -88,10 +88,8 @@ int main(int argc, char **argv) {
 	Node p = handleCandidate(LL_head());
 
 //	printf("Next prime to deal with is %d.\n", p? p->num : 0);
-	while (p) {
-		printf("Found prime %d.\n", p->num);
-		Node p = handleCandidate(p);
-	}
+	while (p && p->num * p->num <= N)
+		p = handleCandidate(p);
 
 	wait(NULL);
 	printLog();
