@@ -7,17 +7,18 @@
 
 #include "linkedlist.h"
 
+#include <time.h>
 
-#ifdef ECLIPSE
-#define fork() 1
-#define wait(node);
-#else
+//#ifdef ECLIPSE
+//#define fork() 1
+//#define wait(node);
+//#else
 #include <unistd.h>
-#endif
+//#endif
 
 
 // Gets node p, deletes all of its multiples (stops if p^2 is missing), and returns the next p
-Node handleCandidate(Node p, FILE* f) {
+Node handleCandidate(Node p, FILE* f, int i) {
 	if (!p)
 		return NULL;
 
@@ -29,13 +30,19 @@ Node handleCandidate(Node p, FILE* f) {
 
 		if (p2->num == p->num * p->num) {
 			isFirstThread = 1;
-			fprintf(f, "Found prime %d.\n", p->num);
+			fprintf(f, "Prime %d (by %d).\n", p->num, i);
 		}
 
 		// Delete if needed, move on either way.
 		if (p2->num % p->num == 0) {
-			fprintf(f, "%d\n", p2->num);
-			p2 = LL_remove(p2);
+
+			struct timeval tv;
+			gettimeofday(&tv, NULL);
+
+			int time_in_mill = tv.tv_usec;
+
+			fprintf(f, "%d: (stored in %d at %d ms)\n", p2->num, p2, time_in_mill);
+			p2 = LL_remove(p2, f);
 		}
 		else
 			p2 = LL_next(p2);
@@ -88,12 +95,14 @@ int main(int argc, char **argv) {
 
 	int i;
 	pid_t pid;
-	for (i = 2; i < T; i++) {
+	for (i = 2; i <= T; i++) {
 		pid = fork();
 		if (pid == 0) {
-			char* fname;
+			char fname[260];
 			sprintf(fname, "thread-%d.log", i);
 			f = fopen(fname, "w");
+			printf("%s stored at address: %d\n", fname, *f);
+//			fprintf(f, "I am %d\n", i);
 			if (f == NULL)
 			{
 			    printf("Error opening file!\n");
@@ -103,12 +112,19 @@ int main(int argc, char **argv) {
 		}
 	}
 
-
-	Node p = handleCandidate(LL_head(), f);
+	fprintf(f, "the last i was %d\n", i);
+	printf("%d's head address: %d\n", i, LL_head());
+	Node p = handleCandidate(LL_head(), f, i);
 
 	while (p && p->num * p->num <= N)
-		p = handleCandidate(p, f);
+		p = handleCandidate(p, f, i);
 
+	LL_logAll(f);
+
+	LL_free(f);
+
+
+	fprintf(f, "Done with i %d", i);
 	fclose(f);
 
 	if (!pid)		// If is a son
@@ -124,9 +140,9 @@ int main(int argc, char **argv) {
 	}
 
 
-	LL_logAll(f);
-
-	LL_free();
+//	LL_logAll(f);
+//
+//	LL_free(f);
 
 	return 0;
 }
