@@ -7,6 +7,9 @@
 
 #include "linkedlist.h"
 
+extern int counter;
+extern int max_counter;
+
 // Returns LL filled with ints from 2 until y (inclusive)
 void LL_getRangeFrom2(int y) {
 	head = NULL;
@@ -92,8 +95,8 @@ Node LL_remove(Node current, FILE* f) {
 	release(current);
 
 	fprintf(f, "Just deleted %d, stored in %d\n", current->num, current);
-	if (current->prev && current->next)
-		fprintf(f, "Now it's %d -> %d\n", current->prev->num, current->prev->next->num);
+//	if (current->prev && current->next)
+//		fprintf(f, "Now it's %d -> %d\n", current->prev->num, current->prev->next->num);
 
 	free(current);
 
@@ -119,12 +122,30 @@ void LL_free(FILE* f) {
 int acquire(Node current) {
 	if (!current)
 		return EINVAL;
-	return pthread_mutex_lock(&(current->mutex));
+	int res = pthread_mutex_lock(&(current->mutex));
+	counter++;
+	max_counter = (counter > max_counter) ? counter : max_counter;
+	current->is_locked = 1;
+	return res;
 }
 
 int release(Node current) {
 	if (!current)
 		return EINVAL;
+	counter--;
+	current->is_locked = 0;
 	return pthread_mutex_unlock(&(current->mutex));
 }
 
+//for use only with 1 thread
+void LL_print_locked(){
+	Node current = head;
+	printf("currently locked: ");
+	while (current){
+		if(current->is_locked){
+			printf("%d ",current->num);
+		}
+		current = current->next;
+	}
+	printf("\n");
+}

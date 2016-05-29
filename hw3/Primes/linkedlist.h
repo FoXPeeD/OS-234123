@@ -18,6 +18,7 @@ struct node_t {
 	struct node_t *prev;
 	struct node_t *next;
 	pthread_mutex_t mutex;
+	int is_locked;
 };
 
 typedef struct node_t* Node;
