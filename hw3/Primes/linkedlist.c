@@ -109,12 +109,12 @@ void LL_logAll(FILE* f) {		// Unsafe - only do when no other threads are running
 
 // Destructor
 void LL_free() {
+	printf("About to delete everything\n");
 	while (head) {
 		Node head_next = head->next;
 		if (head->is_locked)
 			printf("Uh Oh!! Why is %d locked??\n", head->num);
 
-		printf("Deleting %d\n", head->num);
 		free(head);
 		head = head_next;
 	}

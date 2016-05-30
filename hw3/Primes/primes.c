@@ -144,6 +144,9 @@ int main(int argc, char **argv) {
 
 	fclose(f);
 
+	for (j = 0; j < T - 1; j++)
+		pthread_join(pthreads[j], NULL);
+
 	f = fopen("primes.log", "w");
 	if (f == NULL) {
 		printf("Error opening file!\n");
@@ -154,8 +157,6 @@ int main(int argc, char **argv) {
 	fclose(f);
 	LL_free();
 
-	for (j = 0; j < T - 1; j++)
-		pthread_join(pthreads[j], NULL);
 
 	free(arg_threads);
 
