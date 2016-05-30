@@ -7,8 +7,6 @@
 
 #include "linkedlist.h"
 
-//extern int counter;
-//extern int max_counter;
 
 // Returns LL filled with ints from 2 until y (inclusive)
 void LL_getRangeFrom2(int y) {
@@ -35,7 +33,7 @@ void LL_getRangeFrom2(int y) {
 	for (i = 3; i <= y; i++) {
 		Node next = (Node) malloc(sizeof(struct node_t));
 		if (!next) {
-			LL_free(); // COMMENTED OUT ONLY TEMPORARILY
+			LL_free();
 			return;
 		}
 
@@ -45,7 +43,7 @@ void LL_getRangeFrom2(int y) {
 
 		if (pthread_mutex_init(&(next->mutex), NULL)) {
 			free(next);
-			LL_free(); // SAME
+			LL_free();
 			return;
 		}
 		current->next = next;
@@ -66,13 +64,10 @@ Node LL_next(Node current) {
 		return NULL;
 
 
-//	printf("LL_NEXT: Trying to acquire NEXT ##%d ##\n", (current->next)? current->next->num : 0);
 	acquire(current->next);
-	if (!current->next) {
-//		printf("LL_NEXT: Releasing CURRENT ##%d ##\n", (current)? current->num : 0);
+	if (!current->next)
 		release(current);
-	}
-//	printf("LL_NEXT: Releasing PREV ##%d ##\n", (current->prev)? current->prev->num : 0);
+
 	release(current->prev);
 
 	return current->next;
@@ -99,32 +94,27 @@ Node LL_remove(Node current) {
 	Node next = current->next;
 
 	release(current);
-
-//	fprintf(f, "Just deleted %d, stored in %d\n", current->num, current);
-//	fprintf(f, "%d\n", current->num);
-//	if (current->prev && current->next)
-//		fprintf(f, "Now it's %d -> %d\n", current->prev->num, current->prev->next->num);
-
 	free(current);
 
 	return next;
 }
 
 void LL_logAll(FILE* f) {		// Unsafe - only do when no other threads are running.
-	Node p = head;
-	while (p) {
-		fprintf(f, "%d\n", p->num);
-		p = LL_next(p);
+	Node current = head;
+	while (current) {
+		fprintf(f, "%d\n", current->num);
+		current = current->next;
 	}
 }
 
 // Destructor
 void LL_free() {
-//	acquire(head);
-//	Node current = head;
-//	while (current)
 	while (head) {
 		Node head_next = head->next;
+		if (head->is_locked)
+			printf("Uh Oh!! Why is %d locked??\n", head->num);
+
+		printf("Deleting %d\n", head->num);
 		free(head);
 		head = head_next;
 	}
@@ -134,8 +124,6 @@ int acquire(Node current) {
 	if (!current)
 		return EINVAL;
 	int res = pthread_mutex_lock(&(current->mutex));
-//	counter++;
-//	max_counter = (counter > max_counter) ? counter : max_counter;
 	current->is_locked = 1;
 	return res;
 }
@@ -143,20 +131,7 @@ int acquire(Node current) {
 int release(Node current) {
 	if (!current)
 		return EINVAL;
-//	counter--;
-//	current->is_locked = 0;
+	current->is_locked = 0;
 	return pthread_mutex_unlock(&(current->mutex));
 }
 
-////for use only with 1 thread
-//void LL_print_locked(){
-//	Node current = head;
-//	printf("currently locked: ");
-//	while (current){
-//		if(current->is_locked){
-//			printf("%d ",current->num);
-//		}
-//		current = current->next;
-//	}
-//	printf("\n");
-//}
