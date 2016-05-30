@@ -43,4 +43,6 @@ void LL_free(FILE* f);
 int acquire(Node current);
 int release(Node current);
 
+void LL_print_locked(); // TODO: delete
+
 #endif /* LINKEDLIST_H_ */

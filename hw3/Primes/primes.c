@@ -14,6 +14,7 @@
 //#define wait(node);
 //#else
 #include <unistd.h>
+#include <pthread.h>
 //#endif
 
 int counter;
@@ -179,10 +180,10 @@ int main(int argc, char **argv) {
 	    return 1;
 	}
 
-	if (T==1) LL_print_locked();
-	LL_logAll(f);
+//	if (T==1) LL_print_locked();
+//	LL_logAll(f);
 
-	LL_free(f);
+//	LL_free(f);
 	fclose(f);
 
 	free(arg_threads);
