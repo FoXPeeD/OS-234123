@@ -69,7 +69,8 @@ void* thread_do(void* param) {
 	while (p && p->num * p->num <= info.N)
 		p = handleCandidate(p, info.f, info.i);
 
-	release(p->prev);
+	if (p->prev)
+		release(p->prev);
 	release(p);
 
 	fclose(info.f);
@@ -139,7 +140,8 @@ int main(int argc, char **argv) {
 	while (p && p->num * p->num <= N) {
 		p = handleCandidate(p, f, i);
 	}
-	release(p->prev);
+	if (p->prev)
+		release(p->prev);
 	release(p);
 
 	fclose(f);
