@@ -23,6 +23,7 @@ struct node_t {
 
 typedef struct node_t* Node;
 
+
 Node head;
 
 // Return LL filled with ints from 2 until y (inclusive)
@@ -36,6 +37,9 @@ Node LL_next(Node current);
 
 // Delete node from LL and return the node after it (safe)
 Node LL_remove(Node current);
+
+// Logs all the remaining nodes.
+void LL_logAll(FILE* f);
 
 // Destructor
 void LL_free();

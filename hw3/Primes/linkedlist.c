@@ -120,10 +120,14 @@ void LL_logAll(FILE* f) {		// Unsafe - only do when no other threads are running
 
 // Destructor
 void LL_free() {
-	acquire(head);
-	Node current = head;
-	while (current)
-		current = LL_remove(current);
+//	acquire(head);
+//	Node current = head;
+//	while (current)
+	while (head) {
+		Node head_next = head->next;
+		free(head);
+		head = head_next;
+	}
 }
 
 int acquire(Node current) {

@@ -17,8 +17,6 @@
 #include <pthread.h>
 //#endif
 
-int counter;
-int max_counter;
 
 
 // Gets node p, deletes all of its multiples (stops if p^2 is missing), and returns the next p
@@ -133,7 +131,6 @@ int main(int argc, char **argv) {
 
 	FILE* firstf = f;
 	int i;
-	pid_t pid;
 	Thread_info* arg_threads = (Thread_info*) malloc(sizeof(Thread_info)*(T-1));
 	for (i = 2; i <= T; i++) {
 //		pid = fork();
@@ -156,13 +153,11 @@ int main(int argc, char **argv) {
 	}
 	int j = 0;
 	pthread_t pthread;
-	pthread_t pthreads[50];
+	pthread_t pthreads[T];
 	for (j = 0; j < T - 1; j++) {
 		pthread_create(&pthread, NULL, thread_do, &(arg_threads[j]));
 		pthreads[j] = pthread;
 	}
-//	fprintf(f, "the last i was %d\n", i);
-//	printf("%d's head address: %d\n", i, LL_head());
 
 	f = firstf;
 	i = 1;
@@ -172,20 +167,10 @@ int main(int argc, char **argv) {
 	while (p && p->num * p->num <= N){
 		p = handleCandidate(p, f, i);
 	}
-//	printf("All done with all of the primes! Now releasing %d and %d\n", (p->prev)? p->prev->num : 0, (p)? p->num : 0);
 	release(p->prev);
 	release(p);
 
-
-
-
-	fprintf(f, "Done with i %d\n", i);
 	fclose(f);
-
-//	if (!pid)		// If is a son
-//	{
-//		return 0;
-//	}
 
 	f = fopen("primes.log", "w");
 	if (f == NULL)
@@ -194,21 +179,16 @@ int main(int argc, char **argv) {
 	    return 1;
 	}
 
-//	if (T==1) LL_print_locked();
-//	LL_logAll(f);
-
-//	LL_free(f);
+	LL_logAll(f);
 	fclose(f);
-
+	LL_free();
 
 	for (j = 0; j < T - 1; j++) {
-//		printf("Waiting for thread %d\n", j + 2);
 		pthread_join(pthreads[j], NULL);
 	}
 
 	free(arg_threads);
 
-//	printf("max simultaneous locks %d\n", max_counter);
 
 	return 0;
 }
