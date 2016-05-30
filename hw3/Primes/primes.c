@@ -72,7 +72,8 @@ struct thread_info_t {
 typedef struct thread_info_t Thread_info;
 
 
-void thread_do(Thread_info info){
+void* thread_do(void* param){
+	Thread_info info = *(Thread_info*)param;
 	Node p = handleCandidate(LL_head(), info.f, info.i);
 
 	while (p && p->num * p->num <= info.N)
@@ -82,6 +83,8 @@ void thread_do(Thread_info info){
 
 	fprintf(info.f, "Done with i %d\n", info.i);
 	fclose(info.f);
+
+	return NULL;
 }
 
 int main(int argc, char **argv) {
@@ -141,8 +144,9 @@ int main(int argc, char **argv) {
 //		}
 	}
 	int j = 0;
+	pthread_t pthread;
 	for( j=0 ; j < T-1 ; j++){
-		thread_do(arg_threads[j]);
+		pthread_create(&pthread,NULL,thread_do,&(arg_threads[j]));
 	}
 //	fprintf(f, "the last i was %d\n", i);
 //	printf("%d's head address: %d\n", i, LL_head());
