@@ -87,11 +87,11 @@ Node LL_remove(Node current) {
 	}
 	else {
 		release(current->prev);
-		release(current);
 	}
 
 
 	Node next = current->next;
+
 
 	release(current);
 	free(current);
@@ -108,12 +108,9 @@ void LL_logAll(FILE* f) {		// Unsafe - only do when no other threads are running
 }
 
 // Destructor
-void LL_free() {
-	printf("About to delete everything\n");
+void LL_free() {		// Unsafe - only do when no other threads are running.
 	while (head) {
 		Node head_next = head->next;
-		if (head->is_locked)
-			printf("Uh Oh!! Why is %d locked??\n", head->num);
 
 		free(head);
 		head = head_next;
@@ -131,6 +128,7 @@ int acquire(Node current) {
 int release(Node current) {
 	if (!current)
 		return EINVAL;
+
 	current->is_locked = 0;
 	return pthread_mutex_unlock(&(current->mutex));
 }
