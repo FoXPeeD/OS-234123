@@ -37,8 +37,10 @@ Node handleCandidate(Node p, FILE* f, int i) {
 		}
 
 		// Delete if needed, move on either way.
-		if (p2->num % p->num == 0)
-			p2 = LL_remove(p2, f);
+		if (p2->num % p->num == 0) {
+			fprintf(f, "%d\n", p2->num);
+			p2 = LL_remove(p2);
+		}
 		else
 			p2 = LL_next(p2);
 	}

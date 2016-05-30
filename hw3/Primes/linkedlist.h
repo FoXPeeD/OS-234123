@@ -35,10 +35,10 @@ Node LL_head();
 Node LL_next(Node current);
 
 // Delete node from LL and return the node after it (safe)
-Node LL_remove(Node current, FILE* f);
+Node LL_remove(Node current);
 
 // Destructor
-void LL_free(FILE* f);
+void LL_free();
 
 int acquire(Node current);
 int release(Node current);
