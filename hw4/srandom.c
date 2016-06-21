@@ -3,6 +3,8 @@
 #include <linux/kernel.h>
 #include <linux/fs.h>
 #include <linux/slab.h>
+#include <errno.h>
+#include <linux/capability.h>
 
 //for defining __u32 and struct rand_pool_info
 #include <linux/types.h>
@@ -17,9 +19,9 @@
 #define READ_CHUNK 20
 
 
-#DEFINE RNDGETENTCNT _IOR(SRANDOM_MAJOR,0,int*)
+#DEFINE RNDGETENTCNT _IOR(SRANDOM_MAJOR,0,int)
 #DEFINE RNDCLEARPOOL _IO(SRANDOM_MAJOR,1)
-#DEFINE RNDADDENTROPY _IOW(SRANDOM_MAJOR,2,struct rand_pool_info*)
+#DEFINE RNDADDENTROPY _IOW(SRANDOM_MAJOR,2,struct rand_pool_info)
 
 char pooldata[POOL_SIZE];
 unsigned int entropy_count;
@@ -194,7 +196,6 @@ static struct file_operations srandom_fops = {
 	release: srandom_release,
 	read: srandom_read,
 	write: srandom_write,
-	llseek: NULL,
 	ioctl: srandom_ioctl,
 };
 

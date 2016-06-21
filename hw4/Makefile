@@ -8,3 +8,4 @@ all: srandom.o
 
 srandom.o: mix.o sha1.o mymodule.o
 	$(LD) -r $^ -o $@
+
