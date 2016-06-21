@@ -4,4 +4,7 @@ include $(KERNELDIR)/.config
 
 CFLAGS = -D__KERNEL__ -DMODULE -I$(KERNELDIR)/include -O -Wall
 
-all: simpledev.o
+all: mymodule.o
+
+mymodule.o: mix.o sha1.o srandom.o
+	$(LD) -r $^ -o $@
