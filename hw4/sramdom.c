@@ -10,12 +10,21 @@
 
 /* XXX define this to the major number of your device */
 #define SRANDOM_MAJOR 62
+#define MAX_ENTROPY 4096
+#define CHUNK_SIZE 64
+#define POOL_SIZE 512
+#define MIN_ENTROPY_TO_READ 8
 
-
-char pooldata[512];
+char pooldata[POOL_SIZE];
 unsigned int entropy_count;
 DECLARE_WAIT_QUEUE_HEAD(my_waitqueue);
 
+int RNDGETENTCNT (int *p)
+{
+	if( !access_ok(VERIFY_WRITE,p,sizeof(int)) ) return -EFAULT;
+	if ( !copy_to_user(p,&entropy_count),sizeof(int) ) return -EFAULT;
+	return 0;
+}
 
 int RNDCLEARPOOL (void)
 {
@@ -25,10 +34,38 @@ int RNDCLEARPOOL (void)
 }
 
 
-RNDADDENTROPY (struct rand_pool_info *p)
+int RNDADDENTROPY (struct rand_pool_info *p)
 {
+	if(!capable(CAP_SYS_ADMIN)) return -EPERM;
 	
-	if( count>=8 ) wake_up_interruptible(&my_waitqueue);
+	char *my_p = kmalloc(sizeof(rand_pool_info), GFP_KERNEL);
+	if( !my_p ) return -NOMEM;
+	if( !copy_from_user(my_p,p,sizeof(rand_pool_info)) )  return -EFAULT;
+	if(my_p->buf_size==0) return -EFAULT;
+	
+	if(my_p->entropy_count < 0) return -EINVAL;
+	
+	char *my_buf = kmalloc(sizeof(rand_pool_info)+my_p->buf_size, GFP_KERNEL);
+	if( !my_buf ) return -NOMEM;
+	if( !copy_from_user(my_buf,p,sizeof(rand_pool_info)+my_p->buf_size) )  return -EFAULT;
+
+	int count = my_p->buf_size;
+	int index = 0;
+	while(count > CHUNK_SIZE){
+		mix( (my_buf->buf)[index] ,CHUNK_SIZE,pooldata);
+		index += CHUNK_SIZE;
+		count -= CHUNK_SIZE;
+	}
+	mix((my_buf->buf)[index],count,pooldata);
+
+	entropy_count += my_p->entropy_count;
+	if (entropy_count > MAX_ENTROPY) entropy_count = MAX_ENTROPY;
+	kfree(my_buf);
+	kfree(my_buf);
+	
+	if( count >= MIN_ENTROPY_TO_READ ) wake_up_interruptible(&my_waitqueue);
+	return count;
+	
 }
 //struct simple_data {
 //	/* XXX put your "private data" here */
@@ -57,19 +94,20 @@ static ssize_t srandom_read (struct file *file, char *buf,
 	return 0;
 }
 
-//TODO: "loff_t *ppos"?
+
 static ssize_t srandom_write (struct file *file, const char *buf,
 		size_t count, loff_t *ppos)
 {
 	if(count==0) return -EFAULT;
 	char *my_buf = kmalloc(count, GFP_KERNEL);
+	if( !my_buf ) return -NOMEM;
 	if( !copy_from_user(my_buf,buf,count) )  return -EFAULT;
 	
 	int index = 0;
-	while(count>64){
-		mix(my_buf[index],64,pooldata);
-		index += 64;
-		count -= 64;
+	while(count > CHUNK_SIZE){
+		mix(my_buf[index],CHUNK_SIZE,pooldata);
+		index += CHUNK_SIZE;
+		count -= CHUNK_SIZE;
 	}
 	mix(my_buf[index],count,pooldata);
 
@@ -109,7 +147,7 @@ static int __init init_srandom (void)
 	if (retval < 0)
 		return retval;
 	
-	memset(pooldata,0,512);
+	memset(pooldata,0,POOL_SIZE);
 	retval = RNDCLEARPOOL ();
 	if (retval < 0)
 		return retval; //TODO: check which error to return
