@@ -151,7 +151,8 @@ static ssize_t srandom_read(struct file *file, char *buf,
 	
 	int left = n;
 	int index = 0;
-	
+	int i;
+
 	printk("About to copy %d bytes\n", left);
 	while (left > READ_CHUNK)
 	{
@@ -160,14 +161,22 @@ static ssize_t srandom_read(struct file *file, char *buf,
 		
 		left -= READ_CHUNK;
 		index += READ_CHUNK;
-		printk("my_buf is now %.*s\n", index+1, my_buf);
+		printk("%d left, at %d index", left, index);
+		
+		printk("my_buf is now ");
+		for (i=0; i<index; i++)
+		{
+		    printk("%c", my_buf[i]);
+		}
+		printk("\n");
 	}
+	printk("now left with %d", left);
 	char tmp[READ_CHUNK] = {0};
 	hash_pool(pooldata, tmp);
 	mix (tmp, READ_CHUNK, pooldata);
 	memcpy(&(my_buf[index]), tmp, left);
 	
-	if (0 != copy_from_user(buf,my_buf,n))
+	if (0 != copy_to_user(buf,my_buf,n))
 		return -EFAULT;
 
 	kfree(my_buf);
