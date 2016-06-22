@@ -26,9 +26,9 @@ struct rand_pool_info {
 #define READ_CHUNK 20
 
 
-#define RNDGETENTCNT _IOR(SRANDOM_MAJOR,0,int)
-#define RNDCLEARPOOL _IO(SRANDOM_MAJOR,1)
-#define RNDADDENTROPY _IOW(SRANDOM_MAJOR,2,struct rand_pool_info)
+#define RNDGETENTCNT _IOR('1',0,int)
+#define RNDCLEARPOOL _IO('1',1)
+#define RNDADDENTROPY _IOW('1',2,struct rand_pool_info)
 
 char pooldata[POOL_SIZE];
 unsigned int entropy_count;
