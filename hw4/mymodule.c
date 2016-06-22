@@ -11,11 +11,7 @@
 #include <linux/types.h>
 #include <linux/random.h>
 
-// struct rand_pool_info {
-// 	int	entropy_count;
-// 	int	buf_size;
-// 	__u32	buf[0];
-// };
+
 
 /* XXX define this to the major number of your device */
 #define SRANDOM_MAJOR 62
@@ -25,10 +21,6 @@
 #define MIN_ENTROPY_TO_READ 8
 #define READ_CHUNK 20
 
-
-// #define RNDGETENTCNT _IOR(SRANDOM_MAJOR,0x00,int)
-// #define RNDCLEARPOOL _IO(SRANDOM_MAJOR,0x06)
-// #define RNDADDENTROPY _IOW(SRANDOM_MAJOR,0x03,struct rand_pool_info)
 
 char pooldata[POOL_SIZE];
 unsigned int entropy_count;
@@ -40,7 +32,6 @@ void hash_pool (const void *pooldata, void *out);
 
 int srandom_get_count(int *p)
 {
-	printk("In get_count\n");
 	if( !access_ok(VERIFY_WRITE,p,sizeof(int)) )
 		return -EFAULT;
 	if (0 != copy_to_user(p,&entropy_count,sizeof(int)))
@@ -50,9 +41,9 @@ int srandom_get_count(int *p)
 
 int srandom_clear_pool(void)
 {
-	printk("In clear_pool\n");
-	if(!capable(CAP_SYS_ADMIN)) 
+	if (!capable(CAP_SYS_ADMIN)) {
 		return -EPERM;
+	}
 	entropy_count = 0;
 	return 0;
 }
@@ -60,7 +51,6 @@ int srandom_clear_pool(void)
 
 int srandom_add_entropy(struct rand_pool_info *p)
 {
-	printk("In add_entropy\n");
 	if (!capable(CAP_SYS_ADMIN)) 
 		return -EPERM;
 	
@@ -83,17 +73,17 @@ int srandom_add_entropy(struct rand_pool_info *p)
 
 	int count = my_p->buf_size;
 	int index = 0;
-	while (count > CHUNK_SIZE){
+	while (count > CHUNK_SIZE) {
 		mix (&((my_buf->buf)[index]), CHUNK_SIZE, pooldata);
 		index += CHUNK_SIZE;
 		count -= CHUNK_SIZE;
 	}
+	
 	mix (&((my_buf->buf)[index]), count, pooldata);
 
 	entropy_count += my_p->entropy_count;
 	if (entropy_count > MAX_ENTROPY) 
 		entropy_count = MAX_ENTROPY;
-	kfree(my_buf);
 	kfree(my_buf);
 	
 	if (count >= MIN_ENTROPY_TO_READ)
@@ -102,28 +92,20 @@ int srandom_add_entropy(struct rand_pool_info *p)
 	return 0;
 	
 }
-//struct simple_data {
-//	/* XXX put your "private data" here */
-//};
-
-/* XXX put your global variables here */
 
 static int srandom_open(struct inode *inode, struct file *file)
 {
-	printk("In OPEN\n");
 	return 0;
 }
 
 static int srandom_release(struct inode *inode, struct file *file)
 {
-	printk("RELEASE\n");
 	return 0;
 }
 
 static ssize_t srandom_read(struct file *file, char *buf,
 	size_t count, loff_t *ppos)
 {
-	printk("In read\n");
 	int n;
 
 	if (count == 0) 
@@ -151,9 +133,7 @@ static ssize_t srandom_read(struct file *file, char *buf,
 	
 	int left = n;
 	int index = 0;
-	int i;
 
-	printk("About to copy %d bytes\n", left);
 	while (left > READ_CHUNK)
 	{
 		hash_pool(pooldata, &(my_buf[index]));
@@ -161,16 +141,7 @@ static ssize_t srandom_read(struct file *file, char *buf,
 		
 		left -= READ_CHUNK;
 		index += READ_CHUNK;
-		printk("%d left, at %d index", left, index);
-		
-		printk("my_buf is now ");
-		for (i=0; i<index; i++)
-		{
-		    printk("%c", my_buf[i]);
-		}
-		printk("\n");
 	}
-	printk("now left with %d", left);
 	char tmp[READ_CHUNK] = {0};
 	hash_pool(pooldata, tmp);
 	mix (tmp, READ_CHUNK, pooldata);
@@ -212,14 +183,12 @@ static ssize_t srandom_write(struct file *file, const char *buf,
 static int srandom_ioctl(struct inode *inode, struct file *file,
 		unsigned int cmd, unsigned long arg)
 {
-	printk("In ioctl\n");
 	if ( cmd == RNDGETENTCNT ) 
 		return srandom_get_count((int*)arg);
 	if ( cmd == RNDCLEARPOOL ) 
 		return srandom_clear_pool();
 	if ( cmd == RNDADDENTROPY ) 
 		return srandom_add_entropy((struct rand_pool_info*)arg);
-	printk("Bad cmd, options were %d/%d/%d\n", RNDGETENTCNT, RNDCLEARPOOL, RNDADDENTROPY);
 	return -ENOTTY;
 }
 
@@ -234,10 +203,7 @@ static struct file_operations srandom_fops = {
 
 static int __init init_srandom (void)
 {
-	printk("In init_srandom\n");
 	int retval;
-
-	/* XXX initialize global variables */
 
 	retval = register_chrdev (SRANDOM_MAJOR,"srandom", &srandom_fops);
 	if (retval < 0)
@@ -246,7 +212,7 @@ static int __init init_srandom (void)
 	memset(pooldata,0,POOL_SIZE);
 	retval = srandom_clear_pool();
 	if (retval < 0)
-		return retval; //TODO: check which error to return
+		return retval;
 	
 	
 	return 0;
@@ -254,7 +220,6 @@ static int __init init_srandom (void)
 
 static void __exit cleanup_srandom(void)
 {
-	printk("In cleanup\n");
 	unregister_chrdev (SRANDOM_MAJOR, "srandom");
 
 	/* XXX cleanup, release memory, etc. */
