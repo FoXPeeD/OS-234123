@@ -1,0 +1,15 @@
+* Before you run the tests, make sure to unload the module srandom
+and remove /dev/srandom. This is done to assure consistent outputs.
+
+* The directories tests and utils should be put with srandom.o
+
+* If you change the utils .c files, you'll get different output
+
+* To run the tests:
+
+$ cd utils
+$ make
+$ cd ../tests
+$ ./test1.sh > myout
+$ ./test2.sh
+
