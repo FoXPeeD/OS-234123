@@ -9,13 +9,13 @@
 
 //for defining __u32 and struct rand_pool_info
 #include <linux/types.h>
-//#include <linux/random.h>
+#include <linux/random.h>
 
-struct rand_pool_info {
-	int	entropy_count;
-	int	buf_size;
-	__u32	buf[0];
-};
+// struct rand_pool_info {
+// 	int	entropy_count;
+// 	int	buf_size;
+// 	__u32	buf[0];
+// };
 
 /* XXX define this to the major number of your device */
 #define SRANDOM_MAJOR 62
@@ -26,9 +26,9 @@ struct rand_pool_info {
 #define READ_CHUNK 20
 
 
-#define RNDGETENTCNT _IOR('1',0,int)
-#define RNDCLEARPOOL _IO('1',1)
-#define RNDADDENTROPY _IOW('1',2,struct rand_pool_info)
+// #define RNDGETENTCNT _IOR(SRANDOM_MAJOR,0x00,int)
+// #define RNDCLEARPOOL _IO(SRANDOM_MAJOR,0x06)
+// #define RNDADDENTROPY _IOW(SRANDOM_MAJOR,0x03,struct rand_pool_info)
 
 char pooldata[POOL_SIZE];
 unsigned int entropy_count;
@@ -40,15 +40,17 @@ void hash_pool (const void *pooldata, void *out);
 
 int srandom_get_count(int *p)
 {
-	if( !access_ok(VERIFY_WRITE,p,sizeof(int)) ) 
+	printk("In get_count\n");
+	if( !access_ok(VERIFY_WRITE,p,sizeof(int)) )
 		return -EFAULT;
-if ( !copy_to_user(p,&entropy_count,sizeof(int)) ) 
+	if (0 != copy_to_user(p,&entropy_count,sizeof(int)))
 		return -EFAULT;
 	return 0;
 }
 
 int srandom_clear_pool(void)
 {
+	printk("In clear_pool\n");
 	if(!capable(CAP_SYS_ADMIN)) 
 		return -EPERM;
 	entropy_count = 0;
@@ -56,15 +58,16 @@ int srandom_clear_pool(void)
 }
 
 
-int srandom_add_antropy (struct rand_pool_info *p)
+int srandom_add_entropy (struct rand_pool_info *p)
 {
+	printk("In add_entropy\n");
 	if(!capable(CAP_SYS_ADMIN)) 
 		return -EPERM;
 	
 	struct rand_pool_info *my_p = kmalloc(sizeof(struct rand_pool_info), GFP_KERNEL);
 	if( !my_p ) 
 		return -ENOMEM;
-	if( !copy_from_user(my_p,p,sizeof(struct rand_pool_info)) )  
+	if(0 != copy_from_user(my_p,p,sizeof(struct rand_pool_info)) )  
 		return -EFAULT;
 	if(my_p->buf_size==0) 
 		return -EFAULT;
@@ -75,7 +78,7 @@ int srandom_add_antropy (struct rand_pool_info *p)
 	struct rand_pool_info *my_buf = kmalloc(sizeof(struct rand_pool_info)+my_p->buf_size, GFP_KERNEL);
 	if( !my_buf ) 
 		return -ENOMEM;
-	if( !copy_from_user(my_buf, p, sizeof(struct rand_pool_info) + my_p->buf_size) )  
+	if(0 != copy_from_user(my_buf, p, sizeof(struct rand_pool_info) + my_p->buf_size) )  
 		return -EFAULT;
 
 	int count = my_p->buf_size;
@@ -93,8 +96,11 @@ int srandom_add_antropy (struct rand_pool_info *p)
 	kfree(my_buf);
 	kfree(my_buf);
 	
-	if( count >= MIN_ENTROPY_TO_READ ) wake_up_interruptible(&my_waitqueue);
-	return count;
+	if( count >= MIN_ENTROPY_TO_READ )
+		wake_up_interruptible(&my_waitqueue);
+
+	printk("Almost done adding: %d\n", count);
+	return 0;
 	
 }
 //struct simple_data {
@@ -105,11 +111,13 @@ int srandom_add_antropy (struct rand_pool_info *p)
 
 static int srandom_open (struct inode *inode, struct file *file)
 {
+	printk("In OPEN\n");
 	return 0;
 }
 
 static int srandom_release (struct inode *inode, struct file *file)
 {
+	printk("RELEASE\n");
 	return 0;
 }
 
@@ -156,7 +164,7 @@ static ssize_t srandom_read (struct file *file, char *buf,
 	mix (tmp, READ_CHUNK, pooldata);
 	memcpy(&(my_buf[index]),tmp,left);
 	
-	if( !copy_from_user(my_buf,buf,n) )  
+	if(0 != copy_from_user(my_buf,buf,n) )  
 		return -EFAULT;
 
 	return n;
@@ -171,7 +179,7 @@ static ssize_t srandom_write (struct file *file, const char *buf,
 	char *my_buf = kmalloc(count, GFP_KERNEL);
 	if( !my_buf ) 
 		return -ENOMEM;
-	if( !copy_from_user(my_buf,buf,count) )  
+	if(0 != copy_from_user(my_buf,buf,count) )  
 		return -EFAULT;
 	
 	int index = 0;
@@ -191,13 +199,14 @@ static ssize_t srandom_write (struct file *file, const char *buf,
 static int srandom_ioctl (struct inode *inode, struct file *file,
 		unsigned int cmd, unsigned long arg)
 {
+	printk("In ioctl\n");
 	if ( cmd == RNDGETENTCNT ) 
 		return srandom_get_count((int*)arg);
 	if ( cmd == RNDCLEARPOOL ) 
 		return srandom_clear_pool();
 	if ( cmd == RNDADDENTROPY ) 
-		return srandom_add_antropy((struct rand_pool_info*)arg);
-
+		return srandom_add_entropy((struct rand_pool_info*)arg);
+	printk("Bad cmd, options were %d/%d/%d\n", RNDGETENTCNT, RNDCLEARPOOL, RNDADDENTROPY);
 	return -ENOTTY;
 }
 
@@ -208,15 +217,16 @@ static struct file_operations srandom_fops = {
 	read: srandom_read,
 	write: srandom_write,
 	ioctl: srandom_ioctl,
-};
+	};
 
 static int __init init_srandom (void)
 {
+	printk("In init_srandom\n");
 	int retval;
 
 	/* XXX initialize global variables */
 
-	retval = register_chrdev (SRANDOM_MAJOR, "srandom", &srandom_fops);
+	retval = register_chrdev (SRANDOM_MAJOR,"srandom", &srandom_fops);
 	if (retval < 0)
 		return retval;
 	
@@ -231,6 +241,7 @@ static int __init init_srandom (void)
 
 static void __exit cleanup_srandom (void)
 {
+	printk("In cleanup\n");
 	unregister_chrdev (SRANDOM_MAJOR, "srandom");
 
 	/* XXX cleanup, release memory, etc. */
