@@ -63,6 +63,10 @@ int srandom_add_entropy(struct rand_pool_info *p)
 	if (my_p->entropy_count < 0)//CHANGED: swapped places with next if statement(buf_size==0)  
 		return -EINVAL;
 	
+	entropy_count += my_p->entropy_count;	//CHANGED2: moved from line 86 ( before "kfree(my_buf);" )
+	if (entropy_count > MAX_ENTROPY) 
+		entropy_count = MAX_ENTROPY;
+	
 	if (my_p->buf_size==0)
 		return 0;//CHANGED: changed to 0 from -EFAULT
 
@@ -83,9 +87,7 @@ int srandom_add_entropy(struct rand_pool_info *p)
 	
 	mix (&((my_buf->buf)[index]), count, pooldata);
 
-	entropy_count += my_p->entropy_count;
-	if (entropy_count > MAX_ENTROPY) 
-		entropy_count = MAX_ENTROPY;
+
 	kfree(my_buf);
 	
 	if (count >= MIN_ENTROPY_TO_READ)
@@ -112,7 +114,7 @@ static ssize_t srandom_read(struct file *file, char *buf,
 
 	if (count == 0) 
 		return 0;
-	while (entropy_count < MIN_ENTROPY_TO_READ)//TODO: erase while?
+	while (entropy_count < MIN_ENTROPY_TO_READ)
 	{
 		wait_event_interruptible(my_waitqueue, entropy_count >= MIN_ENTROPY_TO_READ);
 		if (signal_pending(current)) 
