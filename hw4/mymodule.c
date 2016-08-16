@@ -59,11 +59,13 @@ int srandom_add_entropy(struct rand_pool_info *p)
 		return -ENOMEM;
 	if (0 != copy_from_user(my_p,p,sizeof(struct rand_pool_info)) )  
 		return -EFAULT;
-	if (my_p->buf_size==0) 
-		return -EFAULT;
 	
-	if (my_p->entropy_count < 0) 
+	if (my_p->entropy_count < 0)//CHANGED: swapped places with next if statement(buf_size==0)  
 		return -EINVAL;
+	
+	if (my_p->buf_size==0)
+		return 0;//CHANGED: changed to 0 from -EFAULT
+
 	
 	struct rand_pool_info *my_buf = kmalloc(sizeof(struct rand_pool_info)+my_p->buf_size, GFP_KERNEL);
 	if (!my_buf ) 
@@ -89,7 +91,7 @@ int srandom_add_entropy(struct rand_pool_info *p)
 	if (count >= MIN_ENTROPY_TO_READ)
 		wake_up_interruptible(&my_waitqueue);
 
-	return 0;
+	return count + index;//CHANGED: return value was 0 
 	
 }
 
@@ -110,7 +112,7 @@ static ssize_t srandom_read(struct file *file, char *buf,
 
 	if (count == 0) 
 		return 0;
-	while (entropy_count < MIN_ENTROPY_TO_READ)
+	while (entropy_count < MIN_ENTROPY_TO_READ)//TODO: erase while?
 	{
 		wait_event_interruptible(my_waitqueue, entropy_count >= MIN_ENTROPY_TO_READ);
 		if (signal_pending(current)) 
@@ -158,8 +160,8 @@ static ssize_t srandom_read(struct file *file, char *buf,
 static ssize_t srandom_write(struct file *file, const char *buf,
 		size_t count, loff_t *ppos)
 {
-	if(count==0) 
-		return -EFAULT;
+	if(count==0)
+		return 0;//CHANGED: previously returned -EFAULT
 	char *my_buf = kmalloc(count, GFP_KERNEL);
 	if( !my_buf ) 
 		return -ENOMEM;
@@ -176,10 +178,9 @@ static ssize_t srandom_write(struct file *file, const char *buf,
 
 	kfree(my_buf);
 
-	return count;
+	return count + index; //CHANGED: added "+index"
 }
 
-//TODO:
 static int srandom_ioctl(struct inode *inode, struct file *file,
 		unsigned int cmd, unsigned long arg)
 {
